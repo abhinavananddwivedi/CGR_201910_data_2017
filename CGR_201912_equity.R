@@ -35,13 +35,12 @@ func_full_NA_col_killer <- function(data_frame)
 df_equity_clean <- df_equity %>% func_full_NA_col_killer(.) #remove empty columns
 df_equity_clean[df_equity_clean < 0] <- NA #ignore negative values
 
-temp_yr <- lubridate::year(df_equity_clean$Date)
 df_equity_clean <- df_equity_clean %>%
-  tibble::add_column(Year = temp_yr) %>%
-  dplyr::select(Date, Year, everything()) #adding year column
+  dplyr::mutate('Year' = lubridate::year(Date)) %>%
+  dplyr::select(Date, Year, everything())
 
-name_country <- colnames(df_equity_clean)[-1] #country names
-num_country <- ncol(df_equity_clean) - 1 #num of columns (excl Date)
+name_country <- colnames(df_equity_clean)[-c(1,2)] #country names
+num_country <- ncol(df_equity_clean) - 2 #num of columns (excl Date)
 
 name_country_pre86 <- df_equity_clean %>% 
   dplyr::filter(Year < 1986) %>%
@@ -69,14 +68,14 @@ df_log_pr <- apply(df_equity_clean[,-c(1,2)], 2, func_log_ret) %>%
   tibble::as_tibble(.) 
 
 # With log returns
-df_equity_clean <- cbind('Date' = date_grid, 
+df_equity_clean_final <- cbind('Date' = date_grid, 
                          'Year' = df_equity_clean$Year[-1], 
                          df_log_pr) %>%
   tibble::as_tibble(.) 
 
 # Nesting
 
-nest_df_equity <- df_equity_clean %>%
+nest_df_equity <- df_equity_clean_final %>%
   dplyr::group_by(Year) %>% 
   dplyr::select(-Date) %>%
   tidyr::nest(.)
@@ -84,47 +83,73 @@ nest_df_equity <- df_equity_clean %>%
 # Only countries with more than 50 usable returns are 
 # allowed in the regression
 
+func_num_0_vec <- function(vec)
+{
+  #This returns the number of 0s in each 
+  #column vector after ignoring missing values
+  return(sum(vec[!is.na(vec)] == 0))
+}
+
 func_LHS_reg_country <- function(df)
 {
   #This function accepts a dataframe, kills its
   #full NA columns, then accepts only those 
-  #columns that have more than 50 non-missing 
+  #columns that have more than 50 observed
   #returns each year
   df_1 <- func_full_NA_col_killer(df)
-  temp <- apply(df_1, 2, function(x){sum(is.na(x))})
-  temp_2 <- df_1[, temp < 315] #missing values < 50
+  temp_NA <- apply(df_1, 2, function(x){sum(is.na(x))})
+  temp_0 <- apply(df_1, 2, func_num_0_vec)
+  temp_2 <- df_1[, as.numeric(temp_NA + temp_0) < 200] #usable values > 50
   
   return(temp_2)
 }
 
 nest_df_equity_LHS <- nest_df_equity %>%
-  dplyr::mutate("LHS_country" = purrr::map(data, func_LHS_reg_country))
+  dplyr::mutate("LHS_country_data" = purrr::map(data, func_LHS_reg_country))
 
-nest_df_equity_RHS <- df_equity_clean %>% 
+nest_df_equity_RHS <- df_equity_clean_final %>% 
   dplyr::select(c(Date, Year, name_country_pre86)) %>%
   dplyr::group_by(Year) %>% 
   dplyr::select(-Date) %>%
   tidyr::nest(.)
 
 nest_df_equity_RHS <- nest_df_equity_RHS %>%
-  dplyr::mutate("RHS_data" = purrr::map(data, func_full_NA_col_killer))
-
+  dplyr::mutate("RHS_country_data" = purrr::map(data, func_full_NA_col_killer))
 
 ## Filling medians for missing values ##
-
-func_NA_filler <- function(vec)
+## This is necessary otherwise NA will proliferate 
+## during covariance matrix calcualtions
+func_NA_filler_vec <- function(vec)
 {
   # This function fills a vector's missing values with its median 
   vec[is.na(vec)] <- median(vec, na.rm = T)
   return(vec)
 }
 
+func_NA_filler_df <- function(df)
+{
+  temp <- apply(df, 2, func_NA_filler_vec)
+  return(temp)
+}
 
-# Changing data from wide format to long format
-# df_equity_long <- df_equity_clean %>%
-#   tidyr::gather(Australia:Venezuela,
-#                 key = "Country",
-#                 value = "Ind_Ret") %>%
-#   dplyr::arrange(Country)
+nest_df_equity_RHS <- nest_df_equity_RHS %>%
+  dplyr::mutate('RHS_country_data_no_NA' = purrr::map(RHS_country_data, 
+                                                      func_NA_filler_df),
+                'Cov_matrix' = purrr::map(RHS_country_data_no_NA, cov))
 
-  
+# Variance explanation contribution of eigenvectors 
+# is \lambda_i/(sum over \lambda_i)
+func_eigen_share <- function(df)
+{
+  #This function accepts a (covariance) matrix
+  #and returns share of variance explained
+  #by top to bottom eigenvectors (values)
+  temp <- eigen(df)
+  share <- cumsum(temp$values)/sum(temp$values)
+  return(share)
+}
+
+nest_df_equity_RHS <- nest_df_equity_RHS %>%
+  dplyr::mutate('Share' = purrr::map(Cov_matrix, func_eigen_share))
+
+
