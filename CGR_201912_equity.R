@@ -7,12 +7,12 @@
 library(tidyverse)
 library(plm)
 library(lmtest)
-library(lubridate)
+library(Matrix)
 
 ### Reading the data file ###
 
 df_equity <- readr::read_csv('CGR_equity_2019.csv', 
-                             na = c("", "NA", ".", " ", "NaN"),
+                             na = c("", "NA", ".", " ", "NaN", 'Inf', '-Inf'),
                              col_names = T,
                              col_types = cols(.default = col_double(), 
                                               Date = col_date(format = "%d/%m/%Y")))
@@ -23,7 +23,6 @@ df_equity <- readr::read_csv('CGR_equity_2019.csv',
 ################################
 
 ### Removing empty columns ###
-
 func_full_NA_col_killer <- function(data_frame)
 {
   # This function kills a data frame's full NA columns
@@ -32,22 +31,16 @@ func_full_NA_col_killer <- function(data_frame)
   return(temp_no_NA_col)
 }
 
+temp_year <- lubridate::year(df_equity$Date)
 
-# df_equity_clean <- df_equity %>% func_full_NA_col_killer(.) #remove empty columns
-# df_equity_clean[df_equity_clean < 0] <- NA #ignore negative values
-
-# df_equity_clean <- df_equity_clean %>%
-#   dplyr::mutate('Year' = lubridate::year(Date)) %>%
-#   dplyr::select(Date, Year, everything())
-
-df_equity_clean <- df_equity %>%
-  dplyr::mutate('Year' = lubridate::year(Date)) %>%
+df_equity <- df_equity %>%
+  tibble::add_column('Year' = temp_year) %>%
   dplyr::select(Date, Year, everything())
 
-name_country <- colnames(df_equity_clean)[-c(1,2)] #country names
+name_country <- colnames(df_equity)[-c(1,2)] #country names
 num_country <- length(name_country)
 
-name_country_pre86 <- df_equity_clean %>% 
+name_country_pre86 <- df_equity %>% 
   dplyr::filter(Year < 1986) %>%
   func_full_NA_col_killer(.) %>%
   dplyr::select(-c(Date, Year)) %>%
@@ -55,8 +48,8 @@ name_country_pre86 <- df_equity_clean %>%
 
 name_country_regular <- setdiff(name_country, name_country_pre86)
 
-year_min <- min(df_equity_clean$Year) #earliest year
-year_max <- max(df_equity_clean$Year) #latest year
+year_min <- min(df_equity$Year) #earliest year
+year_max <- max(df_equity$Year) #latest year
 num_years <- year_max - year_min + 1
 year_grid <- year_min:year_max
 date_grid <- df_equity$Date[-1]
@@ -71,18 +64,30 @@ func_log_ret <- function(price_vec)
   return(diff(log_pr))
 }
 
-df_log_pr <- apply(df_equity_clean[,-c(1,2)], 2, func_log_ret) %>%
+df_log_pr <- apply(df_equity[,-c(1,2)], 2, func_log_ret) %>%
   tibble::as_tibble(.) 
 
+# Some Inf and NaNs may have crept due to taking logs
+func_Inf_NaN_treat_NA_vec <- function(vec)
+{
+  #This function interprets NaN or Inf entries as NA
+  vec[is.infinite(vec)] <- NA
+  vec[is.nan(vec)] <- NA
+  return(vec)
+}
+
+df_log_pr <- apply(df_log_pr, 2, func_Inf_NaN_treat_NA_vec) %>%
+  tibble::as_tibble()
+
 # With log returns
-df_equity_clean_final <- cbind('Date' = date_grid, 
-                         'Year' = df_equity_clean$Year[-1], 
-                         df_log_pr) %>%
+df_equity_clean <- cbind('Date' = date_grid, 
+                         'Year' = df_equity$Year[-1], 
+                         df_log_pr) %>% 
   tibble::as_tibble(.) 
 
 # Nesting
 
-nest_df_equity <- df_equity_clean_final %>%
+nest_df_equity <- df_equity_clean %>%
   dplyr::group_by(Year) %>% 
   dplyr::filter(Year != 2019) %>% #ignore partial year observations
   dplyr::select(-Date) %>%
@@ -118,7 +123,6 @@ func_select_pre86 <- function(df)
 {
   #Select pre-86 country columns from the full data matrix
   temp_temp <- dplyr::select(df, name_country_pre86)
-  #temp_temp <- df[, c(Date, name_country_pre86)]
   return(temp_temp)
 }
 
@@ -126,7 +130,7 @@ nest_df_equity_LHS <- nest_df_equity %>%
   dplyr::mutate("LHS_country_data" = purrr::map(data, func_filter_reg_country)) %>%
   dplyr::mutate('LHS_country_pre86' = purrr::map(data, func_select_pre86))
 
-nest_df_equity_RHS <- df_equity_clean_final %>% 
+nest_df_equity_RHS <- df_equity_clean %>% 
   dplyr::filter(Year != 2019) %>%
   dplyr::select(c(Date, Year, name_country_pre86)) %>%
   dplyr::group_by(Year) %>% 
@@ -161,7 +165,40 @@ nest_df_equity_RHS <- nest_df_equity_RHS %>%
 
 nest_df_equity_merge <- nest_df_equity_LHS %>%
   dplyr::select(-data) %>%
-  tibble::add_column('RHS_data' = nest_df_equity_RHS$RHS_country_clean)
+  tibble::add_column('RHS_data' = nest_df_equity_RHS$RHS_country_clean) %>%
+  dplyr::mutate('Cov_matrix' = purrr::map(RHS_data, cov))
+
+func_eig_val <- function(df)
+{
+  temp_eig <- eigen(df)
+  return(temp_eig$values)
+}
+func_eig_vec <- function(df)
+{
+  temp_eig <- eigen(df)
+  return(temp_eig$vectors)
+}
+
+temp_eigen_val_list <- lapply(nest_df_equity_merge$Cov_matrix, func_eig_val)
+temp_eigen_vec_list <- lapply(nest_df_equity_merge$Cov_matrix, func_eig_vec)
+
+nest_df_equity_merge <- nest_df_equity_merge %>%
+  tibble::add_column('Eigen_values' = temp_eigen_val_list) %>%
+  tibble::add_column('Eigen_vectors' = temp_eigen_vec_list)
+
+# Variance explanation contribution of eigenvectors 
+# is \lambda_i/(sum over \lambda_i)
+func_eigen_share <- function(eig_val_vec)
+{
+  #This function accepts eigen values
+  #and returns share of variance explained
+  #by top to bottom eigenvectors (values)
+  share <- cumsum(eig_val_vec)/sum(eig_val_vec)
+  return(share)
+}
+
+nest_df_equity_merge <- nest_df_equity_merge %>%
+  dplyr::mutate('Share' = purrr::map(Eigen_values, func_eigen_share))
 
 func_select_LHS_RHS <- function(df_1, df_2)
 {
@@ -174,23 +211,5 @@ func_select_LHS_RHS <- function(df_1, df_2)
   #   temp_RHS <- 
   # }
   
-  return(temp_2)
+  return(temp_1)
 }
-
-
-# Variance explanation contribution of eigenvectors 
-# is \lambda_i/(sum over \lambda_i)
-func_eigen_share <- function(df)
-{
-  #This function accepts a (covariance) matrix
-  #and returns share of variance explained
-  #by top to bottom eigenvectors (values)
-  temp <- eigen(df)
-  share <- cumsum(temp$values)/sum(temp$values)
-  return(share)
-}
-
-nest_df_equity_RHS <- nest_df_equity_RHS %>%
-  dplyr::mutate('Share' = purrr::map(Cov_matrix, func_eigen_share))
-
-
