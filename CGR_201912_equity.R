@@ -35,7 +35,8 @@ df_equity <- df_equity %>%
   dplyr::mutate('Year' = lubridate::year(Date)) %>%
   dplyr::mutate('Month' = lubridate::month(Date)) %>%
   dplyr::mutate('Day' = lubridate::day(Date)) %>%
-  dplyr::select(Date, Year, Month, Day, everything())
+  dplyr::select(Date, Year, Month, Day, everything()) %>%
+  dplyr::filter(Year != 2019)
 
 name_country <- colnames(df_equity)[-c(1,2,3,4)] #country names
 num_country <- length(name_country)
@@ -91,7 +92,7 @@ df_equity_clean <- cbind('Date' = date_grid,
 
 nest_df_equity <- df_equity_clean %>%
   dplyr::group_by(Year) %>% 
-  dplyr::filter(Year != 2019) %>% #ignore partial year observations
+  #dplyr::filter(Year != 2019) %>% #ignore partial year observations
   dplyr::select(-Date) %>%
   tidyr::nest(.)
 
@@ -125,14 +126,14 @@ nest_df_equity_LHS <- nest_df_equity %>%
   dplyr::mutate('LHS_country_pre86' = purrr::map(data, func_select_pre86))
 
 nest_df_equity_RHS <- df_equity_clean %>% 
-  dplyr::filter(Year != 2019) %>%
+  #dplyr::filter(Year != 2019) %>%
   dplyr::select(c(Date, Year, Month, Day, name_country_pre86)) %>%
   dplyr::group_by(Year) %>% 
   dplyr::select(-Date) %>%
   tidyr::nest(.)
 
 # Add list of lagged RHS data matrix 
-lag_data_RHS <- c(list(NULL), nest_df_equity_RHS$data[1:45])
+lag_data_RHS <- c(list(NULL), nest_df_equity_RHS$data[1:(num_years - 1)])
 
 nest_df_equity_RHS <- nest_df_equity_RHS %>%
   tibble::add_column('Lag_data' = lag_data_RHS)
@@ -148,8 +149,6 @@ func_join_RHS_lag <- function(df_1, df_2)
   
   lag_North_Am <- df_2 %>% 
     dplyr::select(Month, Day, country_North_Am) 
-  # %>%
-  #   dplyr::rename('Canada_lag' = Canada, 'US_lag' = `United States`)
   
   RHS_full <- dplyr::left_join(df_1, lag_North_Am, by = c('Month', 'Day'))
   
@@ -235,5 +234,86 @@ func_eigen_share <- function(eig_val_vec)
 nest_df_equity_merge <- nest_df_equity_merge %>%
   dplyr::mutate('Eigen_values' = purrr::map(Cov_matrix, func_eig_val)) %>%
   dplyr::mutate('Eigen_vectors' = purrr::map(Cov_matrix, func_eig_vec)) %>%
-  dplyr::mutate('Share' = purrr::map(Eigen_values, func_eigen_share)) %>%
-  dplyr::filter(Year > 1985)
+  dplyr::mutate('Share' = purrr::map(Eigen_values, func_eigen_share)) 
+
+# Add list of lagged eigenvector matrix 
+lag_eigvec <- nest_df_equity_merge$Eigen_vectors[1:num_years-1]
+
+nest_df_equity_merge <- nest_df_equity_merge %>%
+  tibble::add_column('Lag_eigvec' = lag_eigvec)
+
+nest_df_equity_merge <- nest_df_equity_merge %>%
+  dplyr::mutate('PC_out_sample' = purrr::map2(RHS_data, Lag_eigvec, 
+                                              function(df1, df2){return(df1*df2)}))
+
+
+func_num_pc_90 <- function(vec_eig_share)
+{
+  #This function accepts a vector of cumulative
+  #share of variance due to eigenvectors and 
+  #returns the number of eigenvectors needed 
+  #to explain 90% of the variance in the data
+  pc_90 <- which(vec_eig_share >= 0.9)
+  
+  return(min(pc_90))
+}
+
+#How many eigenvectors needed for 90% variance attribution?
+num_pc_90 <-  sapply(nest_df_equity_merge$Share, func_num_pc_90)
+#15 seem enough
+
+func_pc_out_90 <- function(df)
+{
+  temp <- df[,1:15]
+  colnames(temp) <- paste0("PC_", 1:15)
+  
+  return(temp)
+}
+
+nest_df_equity_merge <- nest_df_equity_merge %>%
+  dplyr::mutate('PC_out_sample_90' = purrr::map(PC_out_sample, func_pc_out_90))
+
+
+###
+
+func_select_country_regular <- function(df)
+{
+  #This function accepts the data matrix and 
+  #returns the submatrix with regular countries
+  df_names <- colnames(df)
+  
+  temp <- df %>% 
+    dplyr::select(., which(df_names %in% name_country_regular))
+  
+  return(temp)
+}
+
+nest_df_equity_LHS_regular <- nest_df_equity_merge %>%
+  dplyr::filter(Year > 1985) %>%
+  dplyr::mutate('LHS_country_regular' = purrr::map(LHS_country_data, 
+                                                   func_select_country_regular)) %>%
+  dplyr::select(Year, LHS_country_data, LHS_country_regular, PC_out_sample_90)
+
+### Regressing regular countries' data columns on out of sample PCs ###
+
+func_lm_regular <- function(df1, df2)
+{
+  #This function accepts the data matrix of 
+  #regular countries (df1) and the out of sample PC
+  #matrix (df2) and returns the results of regressions
+  temp_lhs <- as.matrix(df1)
+  temp_rhs <- as.matrix(df2)
+  
+  temp_lm <- lm(formula = temp_lhs ~ temp_rhs)
+  temp_lm_summary <- summary(temp_lm)
+  names(temp_lm_summary) <- colnames(temp_lhs)
+  
+  return(temp_lm_summary)
+}
+
+temp_reg <- purrr::map2(nest_df_equity_LHS_regular$LHS_country_regular,
+                        nest_df_equity_LHS_regular$PC_out_sample_90,
+                        func_lm_regular)
+
+# nest_df_equity_LHS_regular <- nest_df_equity_LHS_regular %>%
+#   tibble::add_column('Year_PC_Reg' = temp_reg)
