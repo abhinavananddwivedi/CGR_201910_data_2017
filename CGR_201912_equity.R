@@ -301,10 +301,8 @@ func_lm_regular_adj_rsqr <- function(df1, df2)
   
   temp_lm <- lm(formula = temp_lhs ~ temp_rhs)
   temp_lm_summary <- summary(temp_lm)
-  #names(temp_lm_summary) <- colnames(temp_lhs)
   
   temp_adj <- sapply(temp_lm_summary, function(x){x$adj.r.squared})
-  #names(temp_adj) <- colnames(temp_lhs)
   temp_adj[temp_adj < 0] <- 0
   temp_div <- 100*(1 - temp_adj)
   
@@ -381,6 +379,34 @@ list_rhs_pre86 <- purrr::map(temp_rhs_pre86, func_rm_col_i)
 nest_df_equity_RHS <- nest_df_equity_RHS %>%
   tibble::add_column('RHS_list_pre86' = list_rhs_pre86)
 
+list_cov <- purrr::map(list_rhs_pre86, 
+                       function(temp_list){lapply(temp_list, cov)})
+list_eigen_val <- purrr::map(list_cov, 
+                             function(temp_list){lapply(temp_list, func_eig_val)})
+list_eigen_vec <- purrr::map(list_cov, 
+                             function(temp_list){lapply(temp_list, func_eig_vec)})
+list_eigen_share <- purrr::map(list_eigen_val, 
+                             function(temp_list){lapply(temp_list, func_eigen_share)})
+
+nest_df_equity_RHS_pre86 <- nest_df_equity_RHS %>%
+  dplyr::select(Year, RHS_list_pre86) %>%
+  tibble::add_column('Share' = list_eigen_share, 
+                     'Eig_vec' = list_eigen_vec)
+
+list_unnest_rhs_pre86 <- nest_df_equity_RHS_pre86 %>%
+  tidyr::unnest(.)
+
+# # Shift down eigenvector list for out of sample PCs
+# list_eig_vec_shift <- purrr::map(list_eigen_vec, 
+#                                  function(temp_list){lapply(temp_list, 
+#                                                             function(list){list[1:num_years-1]})})
+# nest_df_equity_RHS_pre86 <- nest_df_equity_RHS_pre86 %>%
+#   tibble::add_column('Lag_eig_vec' = list_eig_vec_shift)
+
+
+
+##############################################################
+
 func_select_country_pre86 <- function(df)
 {
   #This function accepts the data matrix and 
@@ -393,11 +419,20 @@ func_select_country_pre86 <- function(df)
   return(temp)
 }
 
-list_lhs_pre86 <- purrr::map(nest_df_equity_LHS$LHS_country_data, func_select_country_pre86)
+list_lhs_pre86 <- purrr::map(nest_df_equity_LHS$LHS_country_data, 
+                             func_select_country_pre86)
 
 list_merge_pre86 <- list(lhs_pre86 = NULL, rhs_pre86 = NULL)
-list_merge_pre86$lhs_pre86 <- list_lhs_pre86[-1]
-list_merge_pre86$rhs_pre86 <- list_rhs_pre86
 
-list_merge_pre86 <- list_merge_pre86 %>%
-  tibble::as_tibble(.)
+
+temp_lhs <- as.matrix(list_lhs_pre86[[5]][, 4])
+temp_rhs <- as.matrix(list_rhs_pre86[[4]][[4]])
+
+temp_lm <- lm(formula = temp_lhs ~ temp_rhs)
+temp_adj <- summary(temp_lm)$adj.r.squared
+
+# list_merge_pre86$lhs_pre86 <- list_lhs_pre86[-1]
+# list_merge_pre86$rhs_pre86 <- list_rhs_pre86
+# 
+# list_merge_pre86 <- list_merge_pre86 %>%
+#   tibble::as_tibble(.)
