@@ -18,7 +18,7 @@ library(tidyverse)
 library(Matrix)
 
 ### Reading the data file ###
-df_equity <- readr::read_csv('CGR_equity_2019.csv', 
+df_reit <- readr::read_csv('CGR_reit_2019.csv', 
                              na = c("", "NA", ".", " ", "NaN", 'Inf', '-Inf'),
                              col_names = T,
                              col_types = cols(.default = col_double(), 
@@ -38,17 +38,17 @@ func_full_NA_col_killer <- function(data_frame)
   return(temp_no_NA_col)
 }
 
-df_equity <- df_equity %>%
+df_reit <- df_reit %>%
   dplyr::mutate('Year' = lubridate::year(Date)) %>%
   dplyr::mutate('Month' = lubridate::month(Date)) %>%
   dplyr::mutate('Day' = lubridate::day(Date)) %>%
   dplyr::select(Date, Year, Month, Day, everything()) %>%
   dplyr::filter(Year != 2019)
 
-name_country <- colnames(df_equity)[-c(1,2,3,4)] #country names
+name_country <- colnames(df_reit)[-c(1,2,3,4)] #country names
 num_country <- length(name_country)
 
-name_country_pre86 <- df_equity %>% 
+name_country_pre86 <- df_reit %>% 
   dplyr::filter(Year < 1986) %>%
   func_full_NA_col_killer(.) %>%
   dplyr::select(-c(Date, Year, Month, Day)) %>%
@@ -56,11 +56,11 @@ name_country_pre86 <- df_equity %>%
 
 name_country_regular <- setdiff(name_country, name_country_pre86)
 
-year_min <- min(df_equity$Year) #earliest year
-year_max <- max(df_equity$Year) #latest year
+year_min <- min(df_reit$Year) #earliest year
+year_max <- max(df_reit$Year) #latest year
 num_years <- year_max - year_min + 1
 year_grid <- year_min:year_max
-date_grid <- df_equity$Date[-1]
+date_grid <- df_reit$Date[-1]
 
 # Changing index levels to (log) returns
 
@@ -72,7 +72,7 @@ func_log_ret <- function(price_vec)
   return(diff(log_pr))
 }
 
-df_log_pr <- apply(df_equity[,-c(1,2,3,4)], 2, func_log_ret) %>%
+df_log_pr <- apply(df_reit[,-c(1,2,3,4)], 2, func_log_ret) %>%
   tibble::as_tibble(.) 
 
 # Some Inf and NaNs may have crept due to taking logs
@@ -88,15 +88,15 @@ df_log_pr <- apply(df_log_pr, 2, func_Inf_NaN_treat_NA_vec) %>%
   tibble::as_tibble()
 
 # With log returns
-df_equity_clean <- cbind('Date' = date_grid, 
-                         'Year' = df_equity$Year[-1], 
-                         'Month' = df_equity$Month[-1],
-                         'Day' = df_equity$Day[-1],
+df_reit_clean <- cbind('Date' = date_grid, 
+                         'Year' = df_reit$Year[-1], 
+                         'Month' = df_reit$Month[-1],
+                         'Day' = df_reit$Day[-1],
                          df_log_pr) %>% 
   tibble::as_tibble(.) 
 
 # Nesting
-nest_df_equity <- df_equity_clean %>%
+nest_df_reit <- df_reit_clean %>%
   dplyr::group_by(Year) %>% 
   dplyr::select(-Date) %>%
   tidyr::nest(.)
@@ -120,23 +120,23 @@ func_filter_reg_country <- function(df)
 }
 
 
-nest_df_equity_LHS <- nest_df_equity %>%
+nest_df_reit_LHS <- nest_df_reit %>%
   dplyr::mutate("LHS_country_data" = purrr::map(data, func_filter_reg_country)) 
 
 ##################################################
 ### Constructing the RHS data matrix #############
 ##################################################
 
-nest_df_equity_RHS <- df_equity_clean %>% 
+nest_df_reit_RHS <- df_reit_clean %>% 
   dplyr::select(c(Date, Year, Month, Day, name_country_pre86)) %>%
   dplyr::group_by(Year) %>% 
   dplyr::select(-Date) %>%
   tidyr::nest(.)
 
 # Add list of lagged RHS data matrix 
-lag_data_RHS <- c(list(NULL), nest_df_equity_RHS$data[1:(num_years - 1)])
+lag_data_RHS <- c(list(NULL), nest_df_reit_RHS$data[1:(num_years - 1)])
 
-nest_df_equity_RHS <- nest_df_equity_RHS %>%
+nest_df_reit_RHS <- nest_df_reit_RHS %>%
   tibble::add_column('Lag_data' = lag_data_RHS)
 
 #Augmenting RHS matrix by lags of Canada and US
@@ -157,8 +157,8 @@ func_join_RHS_lag <- function(df_1, df_2)
 }
 
 #RHS data matrix is augmented by lags of North American countries
-RHS_data_matrix_list <- purrr::map2(nest_df_equity_RHS$data[-1],
-                                    nest_df_equity_RHS$Lag_data[-1],
+RHS_data_matrix_list <- purrr::map2(nest_df_reit_RHS$data[-1],
+                                    nest_df_reit_RHS$Lag_data[-1],
                                     func_join_RHS_lag)
 
 #Remove month and day now
@@ -172,11 +172,11 @@ func_remove_month_day <- function(df)
 
 RHS_data_matrix_list <- purrr::map(RHS_data_matrix_list,
                                    func_remove_month_day)
-                                    
-nest_df_equity_RHS <- nest_df_equity_RHS %>%
+
+nest_df_reit_RHS <- nest_df_reit_RHS %>%
   dplyr::mutate('RHS_data_matrix' = c(list(NULL), RHS_data_matrix_list))
 
-nest_df_equity_RHS <- nest_df_equity_RHS %>%
+nest_df_reit_RHS <- nest_df_reit_RHS %>%
   dplyr::filter(Year != 1973) %>%
   dplyr::mutate("RHS_country_data" = purrr::map(RHS_data_matrix, 
                                                 func_filter_reg_country)) 
@@ -199,14 +199,14 @@ func_NA_filler_df <- function(df)
   return(temp)
 }
 
-nest_df_equity_RHS <- nest_df_equity_RHS %>%
+nest_df_reit_RHS <- nest_df_reit_RHS %>%
   dplyr::mutate('RHS_country_clean' = purrr::map(RHS_country_data, 
                                                  func_NA_filler_df)) 
 
-nest_df_equity_merge <- nest_df_equity_LHS %>%
+nest_df_reit_merge <- nest_df_reit_LHS %>%
   dplyr::filter(Year != 1973) %>%
   dplyr::select(-data) %>%
-  tibble::add_column('RHS_data' = nest_df_equity_RHS$RHS_country_clean) %>%
+  tibble::add_column('RHS_data' = nest_df_reit_RHS$RHS_country_clean) %>%
   dplyr::mutate('Cov_matrix' = purrr::map(RHS_data, function(df){cov(df)}))
 
 func_eig_val <- function(df)
@@ -232,19 +232,19 @@ func_eigen_share <- function(eig_val_vec)
   return(share)
 }
 
-nest_df_equity_merge <- nest_df_equity_merge %>%
+nest_df_reit_merge <- nest_df_reit_merge %>%
   dplyr::mutate('Eigen_values' = purrr::map(Cov_matrix, func_eig_val)) %>%
   dplyr::mutate('Eigen_vectors' = purrr::map(Cov_matrix, func_eig_vec)) %>%
   dplyr::mutate('Share' = purrr::map(Eigen_values, func_eigen_share)) 
 
 # Add list of lagged eigenvector matrix 
-lag_eigvec <- nest_df_equity_merge$Eigen_vectors[1:num_years-1]
+lag_eigvec <- nest_df_reit_merge$Eigen_vectors[1:num_years-1]
 
-nest_df_equity_merge <- nest_df_equity_merge %>%
+nest_df_reit_merge <- nest_df_reit_merge %>%
   tibble::add_column('Lag_eigvec' = lag_eigvec)
 
 # Out-of-sample principal components
-nest_df_equity_merge <- nest_df_equity_merge %>%
+nest_df_reit_merge <- nest_df_reit_merge %>%
   dplyr::mutate('PC_out_sample' = purrr::map2(RHS_data, Lag_eigvec, 
                                               function(df1, df2){return(df1*df2)}))
 
@@ -261,7 +261,7 @@ func_num_pc_90 <- function(vec_eig_share)
 }
 
 #How many eigenvectors needed for 90% variance attribution?
-num_pc_90 <-  sapply(nest_df_equity_merge$Share, func_num_pc_90)
+num_pc_90 <-  sapply(nest_df_reit_merge$Share, func_num_pc_90)
 #15 seem enough
 
 func_pc_out_90 <- function(df)
@@ -272,7 +272,7 @@ func_pc_out_90 <- function(df)
   return(temp)
 }
 
-nest_df_equity_merge <- nest_df_equity_merge %>%
+nest_df_reit_merge <- nest_df_reit_merge %>%
   dplyr::mutate('PC_out_sample_90' = purrr::map(PC_out_sample, func_pc_out_90))
 
 
@@ -290,7 +290,7 @@ func_select_country_regular <- function(df)
   return(temp)
 }
 
-nest_df_equity_LHS_regular <- nest_df_equity_merge %>%
+nest_df_reit_LHS_regular <- nest_df_reit_merge %>%
   dplyr::filter(Year > 1985) %>%
   dplyr::mutate('LHS_country_regular' = purrr::map(LHS_country_data, 
                                                    func_select_country_regular)) %>%
@@ -318,11 +318,11 @@ func_lm_adj_rsqr <- function(df1, df2)
   return(temp_div)
 }
 
-temp_reg <- purrr::map2(nest_df_equity_LHS_regular$LHS_country_regular[-1],
-                        nest_df_equity_LHS_regular$PC_out_sample_90[-1],
+temp_reg <- purrr::map2(nest_df_reit_LHS_regular$LHS_country_regular[-1],
+                        nest_df_reit_LHS_regular$PC_out_sample_90[-1],
                         func_lm_adj_rsqr)
 
-nest_df_equity_LHS_regular <- nest_df_equity_LHS_regular %>%
+nest_df_reit_LHS_regular <- nest_df_reit_LHS_regular %>%
   tibble::add_column('Div_index' = c(list(NULL), temp_reg))
 
 
@@ -351,7 +351,7 @@ func_len_max_NA_add <- function(temp_list)
   return(temp_NA_add)
 }
 
-temp_div_list <- nest_df_equity_LHS_regular$Div_index
+temp_div_list <- nest_df_reit_LHS_regular$Div_index
 
 temp_div_NA <- func_len_max_NA_add(temp_div_list)
 
@@ -364,7 +364,7 @@ temp_div_df <- apply(cbind(temp_div_list, temp_div_NA), 1, unlist) %>%
 ##### Computing RHS matrix for pre-86 countries #######################
 #######################################################################
 
-temp_rhs_pre86 <- nest_df_equity_RHS$RHS_country_clean
+temp_rhs_pre86 <- nest_df_reit_RHS$RHS_country_clean
 
 func_rm_col_i <- function(df)
 {
@@ -384,7 +384,7 @@ func_rm_col_i <- function(df)
 
 list_rhs_pre86 <- purrr::map(temp_rhs_pre86, func_rm_col_i)
 
-nest_df_equity_RHS <- nest_df_equity_RHS %>%
+nest_df_reit_RHS <- nest_df_reit_RHS %>%
   tibble::add_column('RHS_list_pre86' = list_rhs_pre86)
 
 list_cov <- purrr::map(list_rhs_pre86, 
@@ -394,22 +394,22 @@ list_eigen_val <- purrr::map(list_cov,
 list_eigen_vec <- purrr::map(list_cov, 
                              function(temp_list){lapply(temp_list, func_eig_vec)})
 list_eigen_share <- purrr::map(list_eigen_val, 
-                             function(temp_list){lapply(temp_list, func_eigen_share)})
+                               function(temp_list){lapply(temp_list, func_eigen_share)})
 
-nest_df_equity_RHS_pre86 <- nest_df_equity_RHS %>%
+nest_df_reit_RHS_pre86 <- nest_df_reit_RHS %>%
   dplyr::select(Year, RHS_list_pre86) %>%
   tibble::add_column('Share' = list_eigen_share, 
                      'Eig_vec' = list_eigen_vec)
 
 # Shift down eigenvector list for out of sample PCs
-temp_list_lag <- nest_df_equity_RHS_pre86$Eig_vec[1:44]
+temp_list_lag <- nest_df_reit_RHS_pre86$Eig_vec[1:44]
 
-nest_df_equity_RHS_pre86 <- nest_df_equity_RHS_pre86 %>% 
+nest_df_reit_RHS_pre86 <- nest_df_reit_RHS_pre86 %>% 
   tibble::add_column('Eig_vec_lag' = c(list(NULL), temp_list_lag)) %>%
   dplyr::filter(Year >= 1986)
 
 #Unnesting now to compute yearly pre-86 out of sample PCs
-list_unnest_rhs_pre86 <- nest_df_equity_RHS_pre86 %>%
+list_unnest_rhs_pre86 <- nest_df_reit_RHS_pre86 %>%
   dplyr::select(Year, RHS_list_pre86, Eig_vec_lag) %>%
   tidyr::unnest(.)
 
@@ -433,18 +433,18 @@ func_select_country_pre86 <- function(df)
   return(temp)
 }
 
-nest_df_equity_LHS_pre86 <- nest_df_equity_LHS %>%
+nest_df_reit_LHS_pre86 <- nest_df_reit_LHS %>%
   dplyr::filter(Year != 1973) %>%
   dplyr::mutate('LHS_country_data_pre86' = purrr::map(LHS_country_data,
                                                       func_select_country_pre86))
 
-nest_df_equity_merge_pre86 <- dplyr::left_join(list_unnest_rhs_pre86,
-                                nest_df_equity_LHS_pre86,
-                                by = 'Year') %>%
+nest_df_reit_merge_pre86 <- dplyr::left_join(list_unnest_rhs_pre86,
+                                               nest_df_reit_LHS_pre86,
+                                               by = 'Year') %>%
   dplyr::select(Year, LHS_country_data_pre86,
                 RHS_list_pre86, PC_out_sample)
 
-nest_df_equity_merge_pre86 <- nest_df_equity_merge_pre86 %>%
+nest_df_reit_merge_pre86 <- nest_df_reit_merge_pre86 %>%
   dplyr::mutate('PC_out_sample_90' = purrr::map(PC_out_sample,
                                                 function(df){df[,1:15]})) %>%
   dplyr::select(-PC_out_sample)
@@ -452,9 +452,9 @@ nest_df_equity_merge_pre86 <- nest_df_equity_merge_pre86 %>%
 
 ### Regressing pre86 LHS countries on out of sample PCs ###
 
-nest_df_equity_merge_pre86 <- nest_df_equity_merge_pre86 %>%
+nest_df_reit_merge_pre86 <- nest_df_reit_merge_pre86 %>%
   dplyr::mutate('Div_index_pre86' = purrr::map2(LHS_country_data_pre86,
-                                         PC_out_sample_90,
-                                         func_lm_adj_rsqr))
+                                                PC_out_sample_90,
+                                                func_lm_adj_rsqr))
 
 
