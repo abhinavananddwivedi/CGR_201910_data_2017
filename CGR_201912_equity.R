@@ -10,7 +10,6 @@ library(lmtest)
 library(Matrix)
 
 ### Reading the data file ###
-
 df_equity <- readr::read_csv('CGR_equity_2019.csv', 
                              na = c("", "NA", ".", " ", "NaN", 'Inf', '-Inf'),
                              col_names = T,
@@ -89,10 +88,8 @@ df_equity_clean <- cbind('Date' = date_grid,
   tibble::as_tibble(.) 
 
 # Nesting
-
 nest_df_equity <- df_equity_clean %>%
   dplyr::group_by(Year) %>% 
-  #dplyr::filter(Year != 2019) %>% #ignore partial year observations
   dplyr::select(-Date) %>%
   tidyr::nest(.)
 
@@ -114,19 +111,15 @@ func_filter_reg_country <- function(df)
   return(temp_2)
 }
 
-func_select_pre86 <- function(df)
-{
-  #Select pre-86 country columns from the full data matrix
-  temp_temp <- dplyr::select(df, name_country_pre86)
-  return(temp_temp)
-}
 
 nest_df_equity_LHS <- nest_df_equity %>%
-  dplyr::mutate("LHS_country_data" = purrr::map(data, func_filter_reg_country)) %>%
-  dplyr::mutate('LHS_country_pre86' = purrr::map(data, func_select_pre86))
+  dplyr::mutate("LHS_country_data" = purrr::map(data, func_filter_reg_country)) 
+
+##################################################
+### Constructing the RHS data matrix #############
+##################################################
 
 nest_df_equity_RHS <- df_equity_clean %>% 
-  #dplyr::filter(Year != 2019) %>%
   dplyr::select(c(Date, Year, Month, Day, name_country_pre86)) %>%
   dplyr::group_by(Year) %>% 
   dplyr::select(-Date) %>%
@@ -242,6 +235,7 @@ lag_eigvec <- nest_df_equity_merge$Eigen_vectors[1:num_years-1]
 nest_df_equity_merge <- nest_df_equity_merge %>%
   tibble::add_column('Lag_eigvec' = lag_eigvec)
 
+# Out-of-sample principal components
 nest_df_equity_merge <- nest_df_equity_merge %>%
   dplyr::mutate('PC_out_sample' = purrr::map2(RHS_data, Lag_eigvec, 
                                               function(df1, df2){return(df1*df2)}))
@@ -296,24 +290,114 @@ nest_df_equity_LHS_regular <- nest_df_equity_merge %>%
 
 ### Regressing regular countries' data columns on out of sample PCs ###
 
-func_lm_regular <- function(df1, df2)
+func_lm_regular_adj_rsqr <- function(df1, df2)
 {
   #This function accepts the data matrix of 
   #regular countries (df1) and the out of sample PC
-  #matrix (df2) and returns the results of regressions
+  #matrix (df2) and returns the explanatory
+  #power (adj rsqr) of regressions
   temp_lhs <- as.matrix(df1)
   temp_rhs <- as.matrix(df2)
   
   temp_lm <- lm(formula = temp_lhs ~ temp_rhs)
   temp_lm_summary <- summary(temp_lm)
-  names(temp_lm_summary) <- colnames(temp_lhs)
+  #names(temp_lm_summary) <- colnames(temp_lhs)
   
-  return(temp_lm_summary)
+  temp_adj <- sapply(temp_lm_summary, function(x){x$adj.r.squared})
+  #names(temp_adj) <- colnames(temp_lhs)
+  temp_adj[temp_adj < 0] <- 0
+  temp_div <- 100*(1 - temp_adj)
+  
+  
+  return(temp_div)
 }
 
-temp_reg <- purrr::map2(nest_df_equity_LHS_regular$LHS_country_regular,
-                        nest_df_equity_LHS_regular$PC_out_sample_90,
-                        func_lm_regular)
+temp_reg <- purrr::map2(nest_df_equity_LHS_regular$LHS_country_regular[-1],
+                        nest_df_equity_LHS_regular$PC_out_sample_90[-1],
+                        func_lm_regular_adj_rsqr)
 
-# nest_df_equity_LHS_regular <- nest_df_equity_LHS_regular %>%
-#   tibble::add_column('Year_PC_Reg' = temp_reg)
+nest_df_equity_LHS_regular <- nest_df_equity_LHS_regular %>%
+  tibble::add_column('Div_index' = c(list(NULL), temp_reg))
+
+
+### Expanding the list of diversification indices as a dataframe ###
+
+func_len_max_NA_add <- function(temp_list)
+{ # This function takes a list with elements of differing lengths,
+  # then finds the maximum length in the list,
+  # then generates NAs equal to the difference between 
+  # the individual element lengths and the maximum length
+  # For example if element 1 has length 10 and the maximum 
+  # length is 100, the returned object will have 90 NAs
+  # corresponding to the first element
+  len_max <- max(sapply(temp_list, length))
+  
+  func_vec_NA_add <- function(vec)
+  {
+    if (length(vec) < len_max)
+    {
+      NA_add <- rep(NA, len_max - length(vec))
+    }
+  }
+  
+  temp_NA_add <- sapply(temp_list, func_vec_NA_add)
+  
+  return(temp_NA_add)
+}
+
+temp_div_list <- nest_df_equity_LHS_regular$Div_index
+
+temp_div_NA <- func_len_max_NA_add(temp_div_list)
+
+# Merge the 'temp_div_list' and 'temp_div_NA' list to be appended
+temp_div_df <- apply(cbind(temp_div_list, temp_div_NA), 1, unlist) %>%
+  as.data.frame(.)
+
+
+#######################################################################
+##### Computing RHS matrix for pre-86 countries #######################
+#######################################################################
+
+temp_rhs_pre86 <- nest_df_equity_RHS$RHS_country_clean
+
+func_rm_col_i <- function(df)
+{
+  #This function accepts a data frame and 
+  #returns a list of dataframes, each one
+  #a copy of the input except that each 
+  #column is omitted one at a time
+  num_col <- ncol(df) - 2
+  temp_list <- list(NULL)
+  for (i in 1:num_col)
+  {
+    temp_list[[i]] <- df[, -i]
+  }
+  
+  return(temp_list)
+}
+
+list_rhs_pre86 <- purrr::map(temp_rhs_pre86, func_rm_col_i)
+
+nest_df_equity_RHS <- nest_df_equity_RHS %>%
+  tibble::add_column('RHS_list_pre86' = list_rhs_pre86)
+
+func_select_country_pre86 <- function(df)
+{
+  #This function accepts the data matrix and 
+  #returns the submatrix with pre-86 countries
+  df_names <- colnames(df)
+  
+  temp <- df %>% 
+    dplyr::select(., which(df_names %in% name_country_pre86))
+  
+  return(temp)
+}
+
+list_lhs_pre86 <- purrr::map(nest_df_equity_LHS$LHS_country_data, func_select_country_pre86)
+
+list_merge_pre86 <- list(lhs_pre86 = NULL, rhs_pre86 = NULL)
+list_merge_pre86$lhs_pre86 <- list_lhs_pre86[-1]
+list_merge_pre86$rhs_pre86 <- list_rhs_pre86
+
+list_merge_pre86 <- list_merge_pre86 %>%
+  tibble::as_tibble(.)
