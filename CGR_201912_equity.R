@@ -290,7 +290,7 @@ nest_df_equity_LHS_regular <- nest_df_equity_merge %>%
 
 ### Regressing regular countries' data columns on out of sample PCs ###
 
-func_lm_regular_adj_rsqr <- function(df1, df2)
+func_lm_adj_rsqr <- function(df1, df2)
 {
   #This function accepts the data matrix of 
   #regular countries (df1) and the out of sample PC
@@ -312,7 +312,7 @@ func_lm_regular_adj_rsqr <- function(df1, df2)
 
 temp_reg <- purrr::map2(nest_df_equity_LHS_regular$LHS_country_regular[-1],
                         nest_df_equity_LHS_regular$PC_out_sample_90[-1],
-                        func_lm_regular_adj_rsqr)
+                        func_lm_adj_rsqr)
 
 nest_df_equity_LHS_regular <- nest_df_equity_LHS_regular %>%
   tibble::add_column('Div_index' = c(list(NULL), temp_reg))
@@ -393,19 +393,25 @@ nest_df_equity_RHS_pre86 <- nest_df_equity_RHS %>%
   tibble::add_column('Share' = list_eigen_share, 
                      'Eig_vec' = list_eigen_vec)
 
+# Shift down eigenvector list for out of sample PCs
+temp_list_lag <- nest_df_equity_RHS_pre86$Eig_vec[1:44]
+
+nest_df_equity_RHS_pre86 <- nest_df_equity_RHS_pre86 %>% 
+  tibble::add_column('Eig_vec_lag' = c(list(NULL), temp_list_lag)) %>%
+  dplyr::filter(Year >= 1986)
+
+#Unnesting now to compute yearly pre-86 out of sample PCs
 list_unnest_rhs_pre86 <- nest_df_equity_RHS_pre86 %>%
+  dplyr::select(Year, RHS_list_pre86, Eig_vec_lag) %>%
   tidyr::unnest(.)
 
-# # Shift down eigenvector list for out of sample PCs
-# list_eig_vec_shift <- purrr::map(list_eigen_vec, 
-#                                  function(temp_list){lapply(temp_list, 
-#                                                             function(list){list[1:num_years-1]})})
-# nest_df_equity_RHS_pre86 <- nest_df_equity_RHS_pre86 %>%
-#   tibble::add_column('Lag_eig_vec' = list_eig_vec_shift)
+#Multiply RHS matrix in year T by eigenvectors from year T-1
+list_unnest_rhs_pre86 <- list_unnest_rhs_pre86 %>%
+  dplyr::mutate('PC_out_sample' = purrr::map2(RHS_list_pre86,
+                                              Eig_vec_lag,
+                                              function(df1, df2){df1*df2}))
 
-
-
-##############################################################
+## Selecting the pre86 countries in LHS ##
 
 func_select_country_pre86 <- function(df)
 {
@@ -419,20 +425,28 @@ func_select_country_pre86 <- function(df)
   return(temp)
 }
 
-list_lhs_pre86 <- purrr::map(nest_df_equity_LHS$LHS_country_data, 
-                             func_select_country_pre86)
+nest_df_equity_LHS_pre86 <- nest_df_equity_LHS %>%
+  dplyr::filter(Year != 1973) %>%
+  dplyr::mutate('LHS_country_data_pre86' = purrr::map(LHS_country_data,
+                                                      func_select_country_pre86))
 
-list_merge_pre86 <- list(lhs_pre86 = NULL, rhs_pre86 = NULL)
+nest_df_equity_merge_pre86 <- dplyr::left_join(list_unnest_rhs_pre86,
+                                nest_df_equity_LHS_pre86,
+                                by = 'Year') %>%
+  dplyr::select(Year, LHS_country_data_pre86,
+                RHS_list_pre86, PC_out_sample)
+
+nest_df_equity_merge_pre86 <- nest_df_equity_merge_pre86 %>%
+  dplyr::mutate('PC_out_sample_90' = purrr::map(PC_out_sample,
+                                                function(df){df[,1:15]})) %>%
+  dplyr::select(-PC_out_sample)
 
 
-temp_lhs <- as.matrix(list_lhs_pre86[[5]][, 4])
-temp_rhs <- as.matrix(list_rhs_pre86[[4]][[4]])
+### Regressing pre86 LHS countries on out of sample PCs ###
 
-temp_lm <- lm(formula = temp_lhs ~ temp_rhs)
-temp_adj <- summary(temp_lm)$adj.r.squared
+nest_df_equity_merge_pre86 <- nest_df_equity_merge_pre86 %>%
+  dplyr::mutate('Div_index_pre86' = purrr::map2(LHS_country_data_pre86,
+                                         PC_out_sample_90,
+                                         func_lm_adj_rsqr))
 
-# list_merge_pre86$lhs_pre86 <- list_lhs_pre86[-1]
-# list_merge_pre86$rhs_pre86 <- list_rhs_pre86
-# 
-# list_merge_pre86 <- list_merge_pre86 %>%
-#   tibble::as_tibble(.)
+
