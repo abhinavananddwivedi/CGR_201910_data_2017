@@ -2,7 +2,7 @@
 ### CGR post 201910, data updated till 2018 #####
 #################################################
 
-### EQUITY DIVERSIFICATION INDICES ###
+### REIT DIVERSIFICATION INDICES ###
 
 #################################################
 ### Redoing all from scratch ####################
@@ -146,10 +146,10 @@ func_join_RHS_lag <- function(df_1, df_2)
   #data matrices, then selects North American countries
   #from the lagged data matrix, then augments the 
   #original RHS data matrix by the lags of Canada and US
-  country_North_Am <- c('Canada', 'United States')
-  
+  country_North_Am <- c('US')
+   
   lag_North_Am <- df_2 %>% 
-    dplyr::select(Month, Day, country_North_Am) 
+    dplyr::select(Month, Day, which(colnames(.) %in% country_North_Am))
   
   RHS_full <- dplyr::left_join(df_1, lag_North_Am, by = c('Month', 'Day'))
   
@@ -262,12 +262,12 @@ func_num_pc_90 <- function(vec_eig_share)
 
 #How many eigenvectors needed for 90% variance attribution?
 num_pc_90 <-  sapply(nest_df_reit_merge$Share, func_num_pc_90)
-#15 seem enough
+#4 seem enough
 
 func_pc_out_90 <- function(df)
 {
-  temp <- df[,1:15]
-  colnames(temp) <- paste0("PC_", 1:15)
+  temp <- df[,1:4]
+  colnames(temp) <- paste0("PC_", 1:4)
   
   return(temp)
 }
@@ -318,46 +318,36 @@ func_lm_adj_rsqr <- function(df1, df2)
   return(temp_div)
 }
 
-temp_reg <- purrr::map2(nest_df_reit_LHS_regular$LHS_country_regular[-1],
-                        nest_df_reit_LHS_regular$PC_out_sample_90[-1],
+temp_reg <- purrr::map2(nest_df_reit_LHS_regular$LHS_country_regular[-c(1,2)],
+                        nest_df_reit_LHS_regular$PC_out_sample_90[-c(1,2)],
                         func_lm_adj_rsqr)
 
 nest_df_reit_LHS_regular <- nest_df_reit_LHS_regular %>%
-  tibble::add_column('Div_index' = c(list(NULL), temp_reg))
+  tibble::add_column('Div_index' = c(list(NULL), list(NULL), temp_reg))
 
 
-### Expanding the list of diversification indices as a dataframe ###
-
-func_len_max_NA_add <- function(temp_list)
-{ # This function takes a list with elements of differing lengths,
-  # then finds the maximum length in the list,
-  # then generates NAs equal to the difference between 
-  # the individual element lengths and the maximum length
-  # For example if element 1 has length 10 and the maximum 
-  # length is 100, the returned object will have 90 NAs
-  # corresponding to the first element
-  len_max <- max(sapply(temp_list, length))
+func_edit_name <- function(vec_name)
+{
+  #Remove the prefix 'Response ' from names
+  names(vec_name) <- stringr::str_remove(names(vec_name), 'Response ')
   
-  func_vec_NA_add <- function(vec)
-  {
-    if (length(vec) < len_max)
-    {
-      NA_add <- rep(NA, len_max - length(vec))
-    }
-  }
-  
-  temp_NA_add <- sapply(temp_list, func_vec_NA_add)
-  
-  return(temp_NA_add)
+  return(vec_name)
 }
 
-temp_div_list <- nest_df_reit_LHS_regular$Div_index
+nest_df_reit_regular_final <- nest_df_reit_LHS_regular %>%
+  dplyr::filter(Year >= 1988) %>%
+  dplyr::mutate('Div_ind_edit' = purrr::map(Div_index, func_edit_name)) %>%
+  dplyr::select(-Div_index)
 
-temp_div_NA <- func_len_max_NA_add(temp_div_list)
+func_pick_name <- function(vec_name) {names(vec_name)}
 
-# Merge the 'temp_div_list' and 'temp_div_NA' list to be appended
-temp_div_df <- apply(cbind(temp_div_list, temp_div_NA), 1, unlist) %>%
-  as.data.frame(.)
+list_unnest_df_reit_regular_final <- nest_df_reit_regular_final %>%
+  dplyr::mutate('Country' = purrr::map(Div_ind_edit, func_pick_name)) %>%
+  dplyr::select(Year, Div_ind_edit, Country) %>%
+  tidyr::unnest(.)
+
+Div_ind_regular_final <- list_unnest_df_reit_regular_final %>%
+  tidyr::spread(key = Country, value = Div_ind_edit) 
 
 
 #######################################################################
@@ -446,7 +436,7 @@ nest_df_reit_merge_pre86 <- dplyr::left_join(list_unnest_rhs_pre86,
 
 nest_df_reit_merge_pre86 <- nest_df_reit_merge_pre86 %>%
   dplyr::mutate('PC_out_sample_90' = purrr::map(PC_out_sample,
-                                                function(df){df[,1:15]})) %>%
+                                                function(df){df[,1:4]})) %>%
   dplyr::select(-PC_out_sample)
 
 
@@ -457,4 +447,59 @@ nest_df_reit_merge_pre86 <- nest_df_reit_merge_pre86 %>%
                                                 PC_out_sample_90,
                                                 func_lm_adj_rsqr))
 
+# Now selecting the relevant results from pre86 countries 
+# func_edit_list_names <- function(vec_named)
+# {
+#   names(vec_named) <- substr(names(vec_named), 10, length(names(vec_named)))
+#   return(vec_named)
+# }
 
+nest_df_reit_merge_pre86 <- nest_df_reit_merge_pre86 %>%
+  dplyr::mutate('Div_edit_pre86' = purrr::map(Div_index_pre86,
+                                              func_edit_name)) %>%
+  dplyr::select(-Div_index_pre86)
+
+year_seq <- seq(1986, 2018)
+Div_list_pre86 <- list(NULL)
+
+for (i in 1:length(year_seq))
+{
+  temp_filter <- nest_df_reit_merge_pre86 %>%
+    dplyr::filter(Year == year_seq[i]) %>%
+    dplyr::select(Div_edit_pre86) 
+  
+  temp_temp <- sapply(temp_filter$Div_edit_pre86, rbind) %>%
+    diag(.)
+  
+  names(temp_temp) <- name_country_pre86
+  
+  Div_list_pre86[[i]] <- temp_temp
+  
+}
+
+nest_df_reit_pre86_final <- nest_df_reit_RHS_pre86 %>%
+  tibble::add_column('Div_ind_pre86_final' = Div_list_pre86) %>%
+  dplyr::select(Year, Div_ind_pre86_final)
+
+Div_ind_pre86_final <- sapply(nest_df_reit_pre86_final$Div_ind_pre86_final, 
+                              rbind) %>% 
+  t(.) %>%
+  tibble::as_tibble() 
+
+colnames(Div_ind_pre86_final) <- name_country_pre86
+
+Div_ind_pre86_final <- Div_ind_pre86_final %>%
+  tibble::add_column('Year' = year_seq) %>%
+  dplyr::select(Year, everything())
+
+#################################################################
+### Joining the regular and pre86 countries' diversification ####
+#################################################################
+
+div_ind_final <- dplyr::full_join(Div_ind_regular_final,
+                                  Div_ind_pre86_final,
+                                  by = 'Year') %>%
+  dplyr::arrange(Year) 
+
+
+readr::write_csv(div_ind_final, 'Div_ind_reit.csv')
