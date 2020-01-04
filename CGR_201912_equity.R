@@ -15,7 +15,6 @@
 ### Libraries ###################################
 
 library(tidyverse)
-library(Matrix)
 
 ### Reading the current data file ###
 df_equity <- readr::read_csv('CGR_equity_2019.csv',
@@ -46,9 +45,9 @@ df_equity <- df_equity %>%
 #   dplyr::select(-Date_Number) %>%
 #   dplyr::select(Date, Year, Month, Day, everything())
 
-#num_usable <- 50 #How many usable returns a country ought to have per year?
-num_usable <- 100
-#num_usable <- 75
+num_usable <- 50 #How many usable returns a country ought to have per year?
+#num_usable <- 100
+
 
 name_country <- colnames(df_equity)[-c(1,2,3,4)] #country names
 num_country <- length(name_country)
@@ -109,14 +108,14 @@ nest_df_equity <- df_equity_clean %>%
   dplyr::select(-Date) %>%
   tidyr::nest(.)
 
-# Only countries with more than 100 usable returns are 
+# Only countries with more than n = num_usable returns are 
 # allowed in the regression
 func_filter_reg_country <- function(df, n = num_usable)
 {
   #This function accepts a dataframe, kills its
   #full NA columns, then accepts only those 
-  #columns that have more than 100 nonstale observed
-  #returns in one year
+  #columns that have more than n = num_usable 
+  #nonstale observed returns in one year
   
   df_1 <- df[, -c(1:3)] #ignore the first 3 columns
   
@@ -143,9 +142,10 @@ func_filter_reg_country <- function(df, n = num_usable)
 nest_df_equity_LHS <- nest_df_equity %>%
   dplyr::mutate("LHS_country_data" = purrr::map(data, func_filter_reg_country)) 
 
-temp_temp <- map(nest_df_equity_LHS$LHS_country_data, func_full_NA_col_killer)
-
 # Final round of full NA column-killing
+temp_temp <- purrr::map(nest_df_equity_LHS$LHS_country_data, 
+                        func_full_NA_col_killer)
+
 nest_df_equity_LHS <- nest_df_equity_LHS %>%
   tibble::add_column('LHS_country' = temp_temp) %>%
   dplyr::select(-LHS_country_data) %>%
@@ -351,7 +351,7 @@ nest_df_equity_LHS_regular <- nest_df_equity_LHS_regular %>%
 func_lm_adj_rsqr <- function(df1, df2)
 {
   #This function accepts the data matrix of LHS
-  #regular countries (df1) and the out of sample PC
+  #countries (df1) and the out of sample PC
   #RHS matrix (df2) and returns the explanatory
   #power (adj rsqr) of regressions
   
@@ -449,7 +449,7 @@ nest_df_equity_RHS_pre86 <- nest_df_equity_RHS_pre86 %>%
 #Unnesting now to compute yearly pre-86 out of sample PCs
 list_unnest_rhs_pre86 <- nest_df_equity_RHS_pre86 %>%
   dplyr::select(Year, RHS_list_pre86, Eig_vec_lag) %>%
-  dplyr::filter(!map_lgl(Eig_vec_lag, is.null)) %>% #ignote null 
+  dplyr::filter(!map_lgl(Eig_vec_lag, is.null)) %>% #ignote null entries
   tidyr::unnest(.)
 
 #Multiply RHS matrix in year T by eigenvectors from year T-1
@@ -459,61 +459,62 @@ list_unnest_rhs_pre86 <- list_unnest_rhs_pre86 %>%
                                               function(df1, df2){df1*df2}))
 
 ## Selecting the pre86 countries in LHS ##
-
 func_select_country_pre86 <- function(df)
 {
   #This function accepts the data matrix and 
   #returns the submatrix with pre-86 countries
   df_names <- colnames(df)
   
-  temp <- df %>% 
-    dplyr::select(., which(df_names %in% name_country_pre86))
+  temp <- df %>%
+    dplyr::select(., dplyr::intersect(df_names, name_country_pre86))
   
   return(temp)
 }
 
 nest_df_equity_LHS_pre86 <- nest_df_equity_LHS %>%
-  dplyr::filter(Year != 1973) %>%
   dplyr::mutate('LHS_country_data_pre86' = purrr::map(LHS_country_data,
                                                       func_select_country_pre86))
 
-nest_df_equity_merge_pre86 <- dplyr::left_join(list_unnest_rhs_pre86,
+nest_df_equity_pre86 <- dplyr::left_join(list_unnest_rhs_pre86,
                                 nest_df_equity_LHS_pre86,
                                 by = 'Year') %>%
   dplyr::select(Year, LHS_country_data_pre86,
                 RHS_list_pre86, PC_out_sample)
 
-nest_df_equity_merge_pre86 <- nest_df_equity_merge_pre86 %>%
+nest_df_equity_pre86 <- nest_df_equity_pre86 %>%
   dplyr::mutate('PC_out_sample_90' = purrr::map(PC_out_sample,
-                                                function(df){df[,1:15]})) %>%
-  dplyr::select(-PC_out_sample)
+                                                function(df){df[,1:num_pc_equity]})) 
 
 
 ### Regressing pre86 LHS countries on out of sample PCs ###
 
-nest_df_equity_merge_pre86 <- nest_df_equity_merge_pre86 %>%
+nest_df_equity_pre86 <- nest_df_equity_pre86 %>%
   dplyr::mutate('Div_index_pre86' = purrr::map2(LHS_country_data_pre86,
                                          PC_out_sample_90,
                                          func_lm_adj_rsqr))
 
-# Now selecting the relevant results from pre86 countries 
+# Now select the relevant results from pre86 countries 
 func_edit_list_names <- function(vec_named)
 {
+  #This function collects a named vector and edits
+  #the names by removing the letters 'Response '  
   names(vec_named) <- substr(names(vec_named), 10, length(names(vec_named)))
   return(vec_named)
 }
 
-nest_df_equity_merge_pre86 <- nest_df_equity_merge_pre86 %>%
+nest_df_equity_pre86 <- nest_df_equity_pre86 %>%
+  dplyr::select(-c(RHS_list_pre86, PC_out_sample)) %>%
   dplyr::mutate('Div_edit_pre86' = purrr::map(Div_index_pre86,
-                                              func_edit_list_names)) %>%
-  dplyr::select(-Div_index_pre86)
+                                              func_edit_list_names)) 
 
 
 Div_list_pre86 <- list(NULL)
 
+year_seq <- unique(nest_df_equity_pre86$Year)
+
 for (i in 1:length(year_seq))
 {
-  temp_filter <- nest_df_equity_merge_pre86 %>%
+  temp_filter <- nest_df_equity_pre86 %>%
     dplyr::filter(Year == year_seq[i]) %>%
     dplyr::select(Div_edit_pre86) 
   
@@ -527,6 +528,7 @@ for (i in 1:length(year_seq))
 }
 
 nest_df_equity_pre86_final <- nest_df_equity_RHS_pre86 %>%
+  dplyr::filter(Year %in% year_seq) %>%
   tibble::add_column('Div_ind_pre86_final' = Div_list_pre86) %>%
   dplyr::select(Year, Div_ind_pre86_final)
 
@@ -551,4 +553,4 @@ div_ind_final <- dplyr::full_join(Div_ind_regular_final,
   dplyr::arrange(Year) 
 
 
-readr::write_csv(div_ind_final, 'Div_ind_equity.csv')
+#readr::write_csv(div_ind_final, 'Div_ind_equity.csv')
