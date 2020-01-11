@@ -30,7 +30,7 @@ library(tidyverse)
 #   dplyr::mutate('Day' = lubridate::day(Date)) %>%
 #   dplyr::select(Date, Year, Month, Day, everything())
 
-# # The previous dataset
+### The previous dataset
 df_equity <- readr::read_csv('FTS_Data_Equity.csv',
                              na = c("", "NA", ".", " ", "NaN", 'Inf', '-Inf'),
                              skip = 3,
@@ -40,18 +40,35 @@ df_equity <- readr::read_csv('FTS_Data_Equity.csv',
 
 df_equity <- df_equity %>%
   dplyr::mutate('Year' = lubridate::year(Date)) %>%
-  dplyr::mutate('Month' = lubridate::month(Date)) %>%
-  dplyr::mutate('Day' = lubridate::day(Date)) %>%
   dplyr::mutate('Canada_lag' = dplyr::lag(Canada)) %>% #include one-day lags
   dplyr::mutate('US_lag' = dplyr::lag(US)) %>% #include one-day lags
   dplyr::select(-Date_Number) %>%
-  dplyr::select(Date, Year, Month, Day, everything())
+  dplyr::select(Date, Year, everything())
 
-#num_usable <- 50 #How many usable returns a country ought to have per year?
-num_usable <- 100
+func_duplic_NA <- function(vec)
+{
+  #This function accepts a vector, finds
+  #duplicated entries, then replaces them 
+  #with NAs
+  vec[duplicated(vec)] <- NA
+  return(vec)
+}
+
+# Find duplicated index values, treat them as missing
+df_equity_no_duplic <- df_equity %>%
+  dplyr::select(-c(Date, Year)) %>%
+  apply(. , 2, func_duplic_NA) %>%
+  tibble::as_tibble(.)
+  
+df_equity <- df_equity_no_duplic %>%
+  tibble::add_column('Date' = df_equity$Date, 'Year' = df_equity$Year) %>%
+  dplyr::select(Date, Year, everything(.))
+
+num_usable <- 50 #How many usable returns a country ought to have per year?
+#num_usable <- 100
 
 name_country <- df_equity %>%
-  dplyr::select(-c(Date, Year, Month, Day, Canada_lag, US_lag)) %>%
+  dplyr::select(-c(Date, Year, Canada_lag, US_lag)) %>%
   colnames(.)
 
 num_country <- length(name_country)
@@ -65,10 +82,10 @@ func_full_NA_col_killer <- function(data_frame)
   return(temp_no_NA_col)
 }
 
-# The cohort of countries with data available pre-86
+# Pre-86 cohort
 name_country_pre86 <- df_equity %>%
   dplyr::filter(Year < 1986) %>%
-  dplyr::select(-c(Date, Year, Month, Day, Canada_lag, US_lag)) %>%
+  dplyr::select(-c(Date, Year, Canada_lag, US_lag)) %>%
   func_full_NA_col_killer(.) %>%
   colnames(.)
 
@@ -86,7 +103,7 @@ func_log_ret <- function(price_vec)
 }
 
 df_log_pr <- df_equity %>%
-  dplyr::select(-c(Date, Year, Month, Day)) %>%
+  dplyr::select(-c(Date, Year)) %>%
   apply(., 2, func_log_ret) %>%
   tibble::as_tibble(.)
 
@@ -103,10 +120,9 @@ df_log_pr <- apply(df_log_pr, 2, func_Inf_NaN_treat_NA_vec) %>%
   tibble::as_tibble()
 
 # With log returns
+
 df_equity_clean <- cbind('Date' = df_equity$Date[-1], 
                          'Year' = df_equity$Year[-1], 
-                         'Month' = df_equity$Month[-1],
-                         'Day' = df_equity$Day[-1],
                          df_log_pr) %>% 
   tibble::as_tibble(.) 
 
@@ -125,7 +141,7 @@ func_filter_reg_country <- function(df, n = num_usable)
   #columns that have more than n = num_usable 
   #nonstale observed returns in one year
   
-  df_1 <- df %>% dplyr::select(-c(Month, Day))
+  df_1 <- df
   
   #Kill fully missing columns
   df_1 <- func_full_NA_col_killer(df_1)
@@ -133,48 +149,20 @@ func_filter_reg_country <- function(df, n = num_usable)
   #How many remaining missing values?
   temp_NA <- apply(df_1, 2, function(x){sum(is.na(x))})
   
-  #How many stale entries?
-  temp_stale <- nrow(df_1) - apply(df_1, 2, 
-                                   function(x){length(unique(x))})
-  
-  temp_not_usable <- temp_NA + temp_stale
-  
-  temp_usable <- df_1[, temp_not_usable < (nrow(df_1) - n)]
-  
-  temp_return <- temp_usable %>%
-    tibble::add_column('Month' = df$Month, 'Day' = df$Day) %>%
-    dplyr::select(Month, Day, everything(.))
-  
-  return(temp_return)
+  temp_usable <- df_1[, temp_NA < (nrow(df_1) - n)]
+
+  return(temp_usable)
 }
 
 nest_df_equity_LHS <- nest_df_equity %>%
-  dplyr::mutate("LHS_country_data" = purrr::map(data, func_filter_reg_country)) 
-
-# Final round of full NA column-killing
-temp_temp <- purrr::map(nest_df_equity_LHS$LHS_country_data, 
-                        func_full_NA_col_killer)
-
-# nest_df_equity_LHS <- nest_df_equity_LHS %>%
-#   tibble::add_column('LHS_country' = temp_temp) %>%
-#   dplyr::select(-LHS_country_data) %>%
-#   dplyr::rename('LHS_country_data' = LHS_country)
-
-nest_df_equity_LHS <- nest_df_equity_LHS %>%
-  tibble::add_column('LHS_country_clean' = temp_temp) 
+  dplyr::mutate("LHS_country_clean" = purrr::map(data, func_filter_reg_country)) 
 
 ##################################################
 ### Constructing the RHS data matrix #############
 ##################################################
 
-# nest_df_equity_RHS <- df_equity_clean %>% 
-#   dplyr::select(c(Date, Year, Month, Day, name_country_pre86)) %>%
-#   dplyr::group_by(Year) %>% 
-#   dplyr::select(-Date) %>%
-#   tidyr::nest(.)
-
 nest_df_equity_RHS <- df_equity_clean %>% 
-  dplyr::select(c(Date, Year, Month, Day, name_country_pre86, 
+  dplyr::select(c(Date, Year, name_country_pre86, 
                   Canada_lag, US_lag)) %>%
   dplyr::group_by(Year) %>% 
   dplyr::select(-Date) %>%
@@ -185,55 +173,6 @@ year_max <- max(nest_df_equity$Year)
 year_min_cohort <- 1986
 num_years_full <- year_max - year_min + 1
 num_years_cohort <- year_max - year_min_cohort + 1
-
-# Add list of lagged RHS data matrix 
-# nest_df_equity_RHS <- nest_df_equity_RHS %>%
-#   dplyr::mutate('Lag_data' = dplyr::lag(data))
-
-# Augmenting RHS matrix by lags of Canada and US
-#country_North_Am <- c('Canada', 'United States', 'US')
-
-# func_join_RHS_lag <- function(df_1, df_2)
-# {
-#   #This function accepts the original and lagged RHS 
-#   #data matrices, then selects North American countries
-#   #from the lagged data matrix, then augments the 
-#   #original RHS data matrix by the lags of Canada and US
-#   
-#   lag_North_Am <- df_2 %>% 
-#     dplyr::select(Month, Day, 
-#                   dplyr::intersect(colnames(.), country_North_Am))
-#   
-#   RHS_full <- dplyr::left_join(df_1, 
-#                                lag_North_Am, 
-#                                by = c('Month', 'Day'))
-#   
-#   return(RHS_full)
-# }
-
-#RHS data matrix is augmented by lags of North American countries
-# RHS_data_matrix_list <- purrr::map2(nest_df_equity_RHS$data[-1],
-#                                     nest_df_equity_RHS$Lag_data[-1],
-#                                     func_join_RHS_lag)
-
-#Remove month and day now
-# func_remove_month_day <- function(df)
-# {
-#   #This function accepts a dataframe and removes
-#   #the first two columns which here contain
-#   #the month and day for the year's data matrix
-#   df_1 <- df %>% dplyr::select(-c(Month, Day))
-#   return(df_1)
-# }
-# 
-# RHS_data_matrix_list <- purrr::map(RHS_data_matrix_list,
-#                                    func_remove_month_day)
-                                    
-# nest_df_equity_RHS <- nest_df_equity_RHS %>%
-#   dplyr::mutate('RHS_data_matrix' = c(list(NULL), RHS_data_matrix_list))
-
-# nest_df_equity_RHS <- nest_df_equity_RHS %>%
-#   dplyr::mutate('RHS_country_data' = purrr::map(data, func_remove_month_day))
 
 nest_df_equity_RHS_clean <- nest_df_equity_RHS %>%
   dplyr::filter(Year >= year_min_cohort) %>%
@@ -263,9 +202,10 @@ nest_df_equity_RHS_clean <- nest_df_equity_RHS_clean %>%
                                                  func_NA_filler_df)) 
 
 # Computing covariance matrices
+
 nest_df_equity_clean <- nest_df_equity_LHS %>%
   dplyr::filter(Year >= year_min_cohort) %>%
-  dplyr::select(-c(data, LHS_country_data)) %>%
+  dplyr::select(-c(data)) %>%
   tibble::add_column('RHS_country_clean' = nest_df_equity_RHS_clean$RHS_country_clean) %>%
   dplyr::mutate('Cov_matrix' = purrr::map(RHS_country_clean, function(df){cov(df)}))
 
@@ -299,35 +239,33 @@ func_eigen_share <- function(eig_val_vec)
 nest_df_equity_clean <- nest_df_equity_clean %>%
   dplyr::mutate('Eigen_values' = purrr::map(Cov_matrix, func_eig_val)) %>%
   dplyr::mutate('Eigen_vectors' = purrr::map(Cov_matrix, func_eig_vec)) 
-#%>%
-#  dplyr::mutate('Share' = purrr::map(Eigen_values, func_eigen_share)) %>%
-#  dplyr::select(-c(Cov_matrix, Eigen_values))
 
-# Add list of lagged eigenvector matrix 
 nest_df_equity_clean <- nest_df_equity_clean %>% 
+  dplyr::select(-Cov_matrix) %>%
   dplyr::mutate('Lag_eigvec' = dplyr::lag(Eigen_vectors))
 
 # How many eigenvectors explain 90% of return variance?
-func_num_pc_90 <- function(vec_eig_share)
-{
-  #This function accepts a vector of cumulative
-  #share of variance due to eigenvectors and 
-  #returns the number of eigenvectors needed 
-  #to explain 90% of the variance in the data
-  pc_90 <- which(vec_eig_share >= 0.9)
-  
-  return(min(pc_90))
-}
+# func_num_pc_90 <- function(vec_eig_share)
+# {
+#   #This function accepts a vector of cumulative
+#   #share of variance due to eigenvectors and 
+#   #returns the number of eigenvectors needed 
+#   #to explain 90% of the variance in the data
+#   pc_90 <- which(vec_eig_share >= 0.9)
+#   
+#   return(min(pc_90))
+# }
 
 #How many eigenvectors needed for 90% variance attribution?
 #num_pc_90 <-  sapply(nest_df_equity_clean$Share, func_num_pc_90) #15 seem enough
-num_pc_equity <- 15
+# num_pc_equity <- 15
+num_pc_equity <- 7
 
 func_pc_out_90 <- function(df)
 {
   #This function accepts a dataframe and returns
   #columns 1 to num_pc_equity, which is 15 as above
-  temp <- df[,1:num_pc_equity]
+  temp <- df[, 1:num_pc_equity]
   colnames(temp) <- paste0("PC_", 1:num_pc_equity)
   
   return(temp)
@@ -363,11 +301,6 @@ nest_df_equity_LHS_regular <- nest_df_equity_reg %>%
   dplyr::mutate('LHS_country_regular' = purrr::map(LHS_country_clean, 
                                                    func_select_country_regular)) 
 
-#num_country_LHS <- sapply(nest_df_equity_LHS_regular$LHS_country_regular, ncol)
-
-# nest_df_equity_LHS_regular <- nest_df_equity_LHS_regular %>%
-#   tibble::add_column('num_country_LHS' = num_country_LHS)
-
 ### Regressing regular countries' data columns on out of sample PCs ###
 
 func_lm_adj_rsqr <- function(df_1, df_2)
@@ -380,7 +313,7 @@ func_lm_adj_rsqr <- function(df_1, df_2)
   temp_lhs <- as.matrix(df_1)
   temp_rhs <- as.matrix(df_2)
   
-  temp_lm <- lm(formula = temp_lhs ~ temp_rhs)
+  temp_lm <- lm(formula = temp_lhs ~ temp_rhs, na.action = na.exclude)
   temp_lm_summary <- summary(temp_lm)
   
   #Extract the explanatory power from OLS summary
@@ -392,12 +325,6 @@ func_lm_adj_rsqr <- function(df_1, df_2)
   
 }
 
-
-# nest_df_equity_LHS_regular <- nest_df_equity_LHS_regular %>%
-#   dplyr::filter(num_country_LHS > 1) %>%
-#   mutate('Div_index' = purrr::map2(LHS_country_regular,
-#                                    PC_out_sample_90,
-#                                    func_lm_adj_rsqr))
 
 nest_df_equity_LHS_regular <- nest_df_equity_LHS_regular %>%
   dplyr::filter(purrr::map(LHS_country_regular, ncol) > 1) %>% #ignore if single country
@@ -412,10 +339,6 @@ func_edit_name <- function(vec_name)
   names(vec_name) <- stringr::str_remove(names(vec_name), 'Response ')
   return(vec_name) 
 }
-
-# nest_df_equity_regular_final <- nest_df_equity_LHS_regular %>%
-#   dplyr::mutate('Div_ind_edit' = c(purrr::map(Div_index, func_edit_name))) %>%
-#   dplyr::select(-c(Div_index, num_country_LHS))
 
 nest_df_equity_regular_final <- nest_df_equity_LHS_regular %>%
   dplyr::mutate('Div_ind_edit' = purrr::map(Div_index, func_edit_name)) %>%
