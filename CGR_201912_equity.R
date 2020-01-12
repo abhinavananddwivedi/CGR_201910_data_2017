@@ -12,8 +12,6 @@
 ### Extensive usage of functional programming ###
 #################################################
 
-### Libraries ###################################
-
 library(tidyverse)
 
 ### Reading the current data file ###
@@ -120,7 +118,6 @@ df_log_pr <- apply(df_log_pr, 2, func_Inf_NaN_treat_NA_vec) %>%
   tibble::as_tibble()
 
 # With log returns
-
 df_equity_clean <- cbind('Date' = df_equity$Date[-1], 
                          'Year' = df_equity$Year[-1], 
                          df_log_pr) %>% 
@@ -174,11 +171,6 @@ year_min_cohort <- 1986
 num_years_full <- year_max - year_min + 1
 num_years_cohort <- year_max - year_min_cohort + 1
 
-nest_df_equity_RHS_clean <- nest_df_equity_RHS %>%
-  dplyr::filter(Year >= year_min_cohort) %>%
-  dplyr::mutate("RHS_country_data" = purrr::map(data, func_filter_reg_country)) 
-
-
 ## Filling medians for residual missing values ######
 ## This is necessary otherwise NA will proliferate ##
 ## during covariance matrix calcualtions ############
@@ -197,17 +189,14 @@ func_NA_filler_df <- function(df)
   return(temp)
 }
 
-nest_df_equity_RHS_clean <- nest_df_equity_RHS_clean %>%
-  dplyr::mutate('RHS_country_clean' = purrr::map(RHS_country_data, 
-                                                 func_NA_filler_df)) 
-
-# Computing covariance matrices
-
+# Joining the LHS and RHS countries and computing covariance matrices
 nest_df_equity_clean <- nest_df_equity_LHS %>%
   dplyr::filter(Year >= year_min_cohort) %>%
   dplyr::select(-c(data)) %>%
-  tibble::add_column('RHS_country_clean' = nest_df_equity_RHS_clean$RHS_country_clean) %>%
-  dplyr::mutate('Cov_matrix' = purrr::map(RHS_country_clean, function(df){cov(df)}))
+  dplyr::left_join(., nest_df_equity_RHS, by = 'Year') %>%
+  dplyr::rename('RHS_country_data' = data) %>%
+  dplyr::mutate('RHS_country_clean' = purrr::map(RHS_country_data, func_NA_filler_df)) %>%
+  dplyr::mutate('Cov_matrix' = purrr::map(RHS_country_clean, cov))
 
 func_eig_val <- function(df)
 {
@@ -236,51 +225,54 @@ func_eigen_share <- function(eig_val_vec)
   return(share)
 }
 
+# Compute eigenvalues, eigenvectors, cumulative shares etc.
 nest_df_equity_clean <- nest_df_equity_clean %>%
+  dplyr::select(-RHS_country_data) %>%
   dplyr::mutate('Eigen_values' = purrr::map(Cov_matrix, func_eig_val)) %>%
-  dplyr::mutate('Eigen_vectors' = purrr::map(Cov_matrix, func_eig_vec)) 
+  dplyr::mutate('Eigen_vectors' = purrr::map(Cov_matrix, func_eig_vec)) %>%
+  dplyr::mutate('Share' = purrr::map(Eigen_values, func_eigen_share))
 
+# Lagging eigenvectors for computing out-of-sample principal components
 nest_df_equity_clean <- nest_df_equity_clean %>% 
-  dplyr::select(-Cov_matrix) %>%
+  dplyr::select(-c(Cov_matrix, Eigen_values)) %>%
   dplyr::mutate('Lag_eigvec' = dplyr::lag(Eigen_vectors))
 
 # How many eigenvectors explain 90% of return variance?
-# func_num_pc_90 <- function(vec_eig_share)
-# {
-#   #This function accepts a vector of cumulative
-#   #share of variance due to eigenvectors and 
-#   #returns the number of eigenvectors needed 
-#   #to explain 90% of the variance in the data
-#   pc_90 <- which(vec_eig_share >= 0.9)
-#   
-#   return(min(pc_90))
-# }
+func_num_pc_90 <- function(vec_eig_share)
+{
+  #This function accepts a vector of cumulative
+  #share of variance due to eigenvectors and
+  #returns the number of eigenvectors needed
+  #to explain 90% of the variance in the data
+  pc_90 <- which(vec_eig_share >= 0.9)
 
-#How many eigenvectors needed for 90% variance attribution?
-#num_pc_90 <-  sapply(nest_df_equity_clean$Share, func_num_pc_90) #15 seem enough
-# num_pc_equity <- 15
-num_pc_equity <- 7
+  return(min(pc_90))
+}
+
+# How many eigenvectors needed for 90% variance attribution?
+num_pc_90 <-  sapply(nest_df_equity_clean$Share, func_num_pc_90) 
+num_pc_equity <- median(num_pc_90)
 
 func_pc_out_90 <- function(df)
 {
   #This function accepts a dataframe and returns
-  #columns 1 to num_pc_equity, which is 15 as above
+  #columns 1 to col_num = num_pc_equity
+  
   temp <- df[, 1:num_pc_equity]
   colnames(temp) <- paste0("PC_", 1:num_pc_equity)
   
   return(temp)
 }
 
-# Out-of-sample principal components
+# Computing out-of-sample principal components
 nest_df_equity_clean <- nest_df_equity_clean %>%
   dplyr::mutate('PC_out_sample' = purrr::map2(RHS_country_clean, 
                                               Lag_eigvec, 
                                               function(df1, df2){return(df1*df2)}))
 
-# Take only num_pc_equity = 15 principal components
-nest_df_equity_reg <- nest_df_equity_clean %>%
-  dplyr::mutate('PC_out_sample_90' = purrr::map(PC_out_sample, func_pc_out_90)) %>%
-  dplyr::select(Year, LHS_country_clean, PC_out_sample_90)
+# Take only n = num_pc_equity principal components
+nest_df_equity_clean <- nest_df_equity_clean %>%
+  dplyr::mutate('PC_out_sample_90' = purrr::map(PC_out_sample, func_pc_out_90)) 
 
 ##########################################################
 ###### Principal components: for regular countries #######
@@ -297,34 +289,60 @@ func_select_country_regular <- function(df)
   return(temp)
 }
 
-nest_df_equity_LHS_regular <- nest_df_equity_reg %>%
+nest_df_equity_LHS_regular <- nest_df_equity_clean %>%
+  dplyr::select(Year, LHS_country_clean, PC_out_sample_90) %>%
   dplyr::mutate('LHS_country_regular' = purrr::map(LHS_country_clean, 
                                                    func_select_country_regular)) 
 
 ### Regressing regular countries' data columns on out of sample PCs ###
 
+# Diagnostics for crashing regressions
+# i <- 25
+# df_1 <- nest_df_equity_LHS_regular$LHS_country_regular[[i]]
+# df_2 <- nest_df_equity_LHS_regular$PC_out_sample_90[[i]]
+# apply(df_1, 2, function(x){sum(is.na(x))/length(x)})
+# temp_lhs <- as.matrix(df_1)
+# temp_rhs <- as.matrix(df_2)
+# temp_div <- list(NULL)
+# for (j in 1:ncol(temp_lhs))
+# {
+#   temp_lm <- summary(lm(formula = temp_lhs[,j] ~ temp_rhs))
+#   temp_adj <- temp_lm$adj.r.squared
+#   temp_adj[temp_adj < 0 ] <- 0
+#   temp_div[[j]] <- 100*(1 - temp_adj)
+# }
+# unlist(temp_div)
+
+#threshold = 0.80
+
 func_lm_adj_rsqr <- function(df_1, df_2)
 {
   #This function accepts the data matrix of LHS
   #countries (df1) and the out of sample PC
-  #RHS matrix (df2) and returns the explanatory
-  #power (adj rsqr) of regressions
+  #RHS matrix (df2) and returns div = 100 - adj rsqr
   
   temp_lhs <- as.matrix(df_1)
   temp_rhs <- as.matrix(df_2)
   
-  temp_lm <- lm(formula = temp_lhs ~ temp_rhs, na.action = na.exclude)
-  temp_lm_summary <- summary(temp_lm)
+  # How many missing values?
+  temp_temp <- apply(temp_lhs, 2, function(x){sum(is.na(x))/length(x)})
   
-  #Extract the explanatory power from OLS summary
-  temp_adj <- sapply(temp_lm_summary, function(x){x$adj.r.squared})
-  temp_adj[temp_adj < 0] <- 0
-  temp_div <- 100*(1 - temp_adj)
+  #temp_lhs_clean <- temp_lhs[, temp_temp < prop]
   
-  return(temp_div)
+  temp_div <- list(NULL)
   
+  # Regress each column (country) on RHS
+  for (j in 1:ncol(temp_lhs))
+  {
+    # temp_lm_summary <- summary(lm(formula = temp_lhs_clean[, j] ~ temp_rhs))
+    temp_lm_summary <- summary(lm(formula = temp_lhs[, j] ~ temp_rhs))
+    temp_adj <- temp_lm_summary$adj.r.squared
+    temp_adj[temp_adj < 0] <- 0
+    temp_div[[j]] <- 100*(1 - temp_adj)
+  }
+  
+  return(unlist(temp_div))
 }
-
 
 nest_df_equity_LHS_regular <- nest_df_equity_LHS_regular %>%
   dplyr::filter(purrr::map(LHS_country_regular, ncol) > 1) %>% #ignore if single country
@@ -332,16 +350,23 @@ nest_df_equity_LHS_regular <- nest_df_equity_LHS_regular %>%
                                    PC_out_sample_90,
                                    func_lm_adj_rsqr))
 
+# func_attach_name <- function(df_1, vec, prop = threshold)
+# {
+#   temp_2 <- apply(df_1, 2, function(x){sum(is.na(x))/length(x)})
+#   temp_3 <- df_1[, temp_2 < prop]
+#   names(vec) <- colnames(temp_3)
+#   return(vec)
+# }
 
-func_edit_name <- function(vec_name)
+func_attach_name <- function(df_1, vec)
 {
-  #Remove the prefix 'Response ' from names
-  names(vec_name) <- stringr::str_remove(names(vec_name), 'Response ')
-  return(vec_name) 
+  names(vec) <- colnames(df_1)
+  return(vec)
 }
 
 nest_df_equity_regular_final <- nest_df_equity_LHS_regular %>%
-  dplyr::mutate('Div_ind_edit' = purrr::map(Div_index, func_edit_name)) %>%
+  dplyr::mutate('Div_ind_edit' = purrr::map2(LHS_country_regular, Div_index,
+                                             func_attach_name)) %>%
   dplyr::select(c(Year, Div_ind_edit))
  
 func_pick_name <- function(vec_name) {names(vec_name)}
