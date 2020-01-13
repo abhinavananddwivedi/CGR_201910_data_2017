@@ -58,12 +58,13 @@ df_equity_no_duplic <- df_equity %>%
   apply(. , 2, func_duplic_NA) %>%
   tibble::as_tibble(.)
   
-df_equity <- df_equity_no_duplic %>%
-  tibble::add_column('Date' = df_equity$Date, 'Year' = df_equity$Year) %>%
+df_equity_no_duplic <- df_equity_no_duplic %>%
+  tibble::add_column('Date' = df_equity$Date, 
+                     'Year' = df_equity$Year) %>%
   dplyr::select(Date, Year, everything(.))
 
-num_usable <- 50 #How many usable returns a country ought to have per year?
-#num_usable <- 100
+#num_usable <- 50 #How many usable returns a country ought to have per year?
+num_usable <- 100
 
 name_country <- df_equity %>%
   dplyr::select(-c(Date, Year, Canada_lag, US_lag)) %>%
@@ -97,10 +98,10 @@ func_log_ret <- function(price_vec)
   #the formula: r_t = log(p_t) - log(p_{t-1})
   
   log_pr <- log(price_vec)
-  return(diff(log_pr))
+  return(c(NA, diff(log_pr)))
 }
 
-df_log_pr <- df_equity %>%
+df_log_pr <- df_equity_no_duplic %>%
   dplyr::select(-c(Date, Year)) %>%
   apply(., 2, func_log_ret) %>%
   tibble::as_tibble(.)
@@ -118,10 +119,10 @@ df_log_pr <- apply(df_log_pr, 2, func_Inf_NaN_treat_NA_vec) %>%
   tibble::as_tibble()
 
 # With log returns
-df_equity_clean <- cbind('Date' = df_equity$Date[-1], 
-                         'Year' = df_equity$Year[-1], 
-                         df_log_pr) %>% 
-  tibble::as_tibble(.) 
+df_equity_clean <- df_log_pr %>%
+  tibble::add_column('Date' = df_equity$Date,
+                     'Year' = df_equity$Year) %>%
+  dplyr::select(Date, Year, everything())
 
 # Nesting
 nest_df_equity <- df_equity_clean %>%
@@ -138,10 +139,8 @@ func_filter_reg_country <- function(df, n = num_usable)
   #columns that have more than n = num_usable 
   #nonstale observed returns in one year
   
-  df_1 <- df
-  
   #Kill fully missing columns
-  df_1 <- func_full_NA_col_killer(df_1)
+  df_1 <- func_full_NA_col_killer(df)
   
   #How many remaining missing values?
   temp_NA <- apply(df_1, 2, function(x){sum(is.na(x))})
@@ -324,17 +323,11 @@ func_lm_adj_rsqr <- function(df_1, df_2)
   temp_lhs <- as.matrix(df_1)
   temp_rhs <- as.matrix(df_2)
   
-  # How many missing values?
-  temp_temp <- apply(temp_lhs, 2, function(x){sum(is.na(x))/length(x)})
-  
-  #temp_lhs_clean <- temp_lhs[, temp_temp < prop]
-  
   temp_div <- list(NULL)
   
   # Regress each column (country) on RHS
   for (j in 1:ncol(temp_lhs))
   {
-    # temp_lm_summary <- summary(lm(formula = temp_lhs_clean[, j] ~ temp_rhs))
     temp_lm_summary <- summary(lm(formula = temp_lhs[, j] ~ temp_rhs))
     temp_adj <- temp_lm_summary$adj.r.squared
     temp_adj[temp_adj < 0] <- 0
@@ -349,14 +342,6 @@ nest_df_equity_LHS_regular <- nest_df_equity_LHS_regular %>%
   mutate('Div_index' = purrr::map2(LHS_country_regular,
                                    PC_out_sample_90,
                                    func_lm_adj_rsqr))
-
-# func_attach_name <- function(df_1, vec, prop = threshold)
-# {
-#   temp_2 <- apply(df_1, 2, function(x){sum(is.na(x))/length(x)})
-#   temp_3 <- df_1[, temp_2 < prop]
-#   names(vec) <- colnames(temp_3)
-#   return(vec)
-# }
 
 func_attach_name <- function(df_1, vec)
 {
@@ -379,6 +364,8 @@ list_unnest_df_equity_regular_final <- nest_df_equity_regular_final %>%
 Div_ind_regular_final <- list_unnest_df_equity_regular_final %>%
   tidyr::spread(key = Country, value = Div_ind_edit) 
 
+apply(Div_ind_regular_final[, - 1], 2, function(x){mean(x, na.rm = T)}) %>%
+  plot(., type = 'l')
 
 #######################################################################
 ##### Computing RHS matrix for pre-86 countries #######################
