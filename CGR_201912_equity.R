@@ -267,7 +267,7 @@ func_pc_out_90 <- function(df)
 nest_df_equity_clean <- nest_df_equity_clean %>%
   dplyr::mutate('PC_out_sample' = purrr::map2(RHS_country_clean, 
                                               Lag_eigvec, 
-                                              function(df1, df2){return(df1*df2)}))
+                                              function(df1, df2){return(df1%*%df2)}))
 
 # Take only n = num_pc_equity principal components
 nest_df_equity_clean <- nest_df_equity_clean %>%
@@ -329,8 +329,7 @@ func_lm_adj_rsqr <- function(df_1, df_2)
   for (j in 1:ncol(temp_lhs))
   {
     temp_lm_summary <- summary(lm(formula = temp_lhs[, j] ~ temp_rhs))
-    temp_adj <- temp_lm_summary$adj.r.squared
-    temp_adj[temp_adj < 0] <- 0
+    temp_adj <- max(temp_lm_summary$adj.r.squared, 0)
     temp_div[[j]] <- 100*(1 - temp_adj)
   }
   
