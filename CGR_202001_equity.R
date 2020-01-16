@@ -149,7 +149,10 @@ func_pc_90 <- function(vec)
 
 # How many PCs needed for explaining 90% of variation?
 num_pc_90 <- sapply(nest_year_return_LHS_RHS$Share, func_pc_90)
-num_pc_equity <- median(num_pc_90) # 12 are enough
+# num_pc_equity <- median(num_pc_90) # 12 are enough
+num_pc_equity <- max(num_pc_90) # At John's suggestion
+
+### PC computation for ordinary countries ###
 
 # Compute PCs
 nest_year_return_LHS_RHS <- nest_year_return_LHS_RHS %>%
@@ -172,9 +175,11 @@ func_inf_nan_NA_df <- function(df)
     vec[is.infinite(vec) | is.nan(vec)] <- NA
     return(vec)
   }
+  
   return(apply(df, 2, func_inf_nan_NA_vec))
 }
 
+# Treat as missing any infinite or NaN values that might be remaining
 nest_year_regression <- nest_year_regression %>%
   dplyr::mutate('LHS_clean' = purrr::map(LHS_country_ordinary, func_inf_nan_NA_df))
 
@@ -204,9 +209,9 @@ nest_year_regression <- nest_year_regression %>%
 
 func_attach_name <- function(df_1, vec)
 {
-  # Accepts regression LHS and unnamed diversification
-  # indices and attaches the column names of LHS to 
-  # the vector of the indices
+  # Accepts regression LHS matrix and unnamed 
+  # diversification vector indices and attaches 
+  # the column names of LHS to the vector of indices
   names(vec) <- colnames(df_1)
   return(vec)
 }
@@ -216,9 +221,9 @@ nest_year_regression <- nest_year_regression %>%
   dplyr::mutate('Div_ind_edit' = purrr::map2(LHS_clean, Div_ind,
                                              func_attach_name))
 
-func_pick_name <- function(vec_name) {names(vec_name)}
+func_pick_name <- function(vec_name) {names(vec_name)} #extract names
 
-# Unnest results
+# Unnest results in long format
 list_unnest_div_ordinary <- nest_year_regression %>%
   dplyr::mutate('Country' = purrr::map(Div_ind_edit, func_pick_name)) %>%
   dplyr::select(Year, Div_ind_edit, Country) %>%
@@ -228,7 +233,151 @@ list_unnest_div_ordinary <- nest_year_regression %>%
 Div_ind_ordinary <- list_unnest_div_ordinary %>%
   tidyr::spread(key = Country, value = Div_ind_edit) 
 
-# apply(Div_ind_ordinary[, - 1], 2, function(x){mean(x, na.rm = T)}) %>%
-#   plot(., type = 'l')
-# 
+### PC computation for pre cohort countries ###
+
+nest_year_pre_cohort <- nest_year_return %>%
+  dplyr::select(Year, LHS_country_valid) %>%
+  dplyr::filter(Year >= year_cohort) %>%
+  dplyr::mutate('LHS_clean' = purrr::map(LHS_country_valid, 
+                                         func_inf_nan_NA_df)) %>% #remove infinite or NaNs
+  dplyr::mutate('LHS_pre_cohort' = purrr::map(LHS_clean, 
+                                              func_select_pre_cohort)) %>%
+  dplyr::mutate('RHS_countries' = purrr::map(LHS_pre_cohort, func_NA_med_df))
+
+func_rm_col_j <- function(df)
+{
+  # This function accepts a data matrix and generates 
+  # a sequence of matrices each one missing one 
+  # column at a time
+  temp_list <- list(NULL)
+  
+  for (j in 1:ncol(df))
+  {
+    temp_list[[j]] <- df[, -j]
+  }
+  
+  return(temp_list)
+}
+
+# Generate sequence of matrices with each column removed once
+nest_year_pre_cohort <- nest_year_pre_cohort %>%
+  dplyr::mutate('RHS_country_j' = purrr::map(RHS_countries, func_rm_col_j)) %>%
+  dplyr::select(-LHS_country_valid)
+
+func_eig_val_list <- function(temp_list)
+{
+  eig_val_list <- purrr::map(temp_list, 
+                             function(df){return(eigen(df)$values)})
+  return(eig_val_list)
+}
+
+func_eig_vec_list <- function(temp_list)
+{
+  eig_vec_list <- purrr::map(temp_list, 
+                             function(df){return(eigen(df)$vectors)})
+  return(eig_vec_list)
+}
+
+nest_year_pre_cohort <- nest_year_pre_cohort %>%
+  dplyr::mutate('Cov_list_j' = purrr::map(RHS_country_j, 
+                                          function(temp_list){return(purrr::map(temp_list, cov))})) %>%
+  dplyr::mutate('Eig_val_list_j' = purrr::map(Cov_list_j, func_eig_val_list)) %>%
+  dplyr::mutate('Eig_vec_list_j' = purrr::map(Cov_list_j, func_eig_vec_list)) %>%
+  dplyr::mutate('Lag_eig_vec_list_j' = dplyr::lag(Eig_vec_list_j))
+
+nest_year_pre_cohort_final <- nest_year_pre_cohort %>%
+  dplyr::select(Year, LHS_pre_cohort, RHS_country_j, Lag_eig_vec_list_j)
+
+func_list_multiply <- function(list1, list2)
+{
+  func_df_mult <- function(df1, df2)
+  {
+    return(df1%*%df2)
+  }
+  
+  list3 <- purrr::map2(list1, list2, func_df_mult)
+  
+  return(list3)
+  
+}
+
+nest_year_pre_cohort_final <- nest_year_pre_cohort_final %>%
+  dplyr::mutate('PC_list_j' = purrr::map2(RHS_country_j, Lag_eig_vec_list_j,
+                                          func_list_multiply))
+
+
+func_select_PC_list <- function(list)
+{
+  func_select_PC_df <- function(df)
+  {
+    return(df[, 1:num_pc_equity])
+  }
+  
+  list1 <- purrr::map(list, func_select_PC_df)
+  
+  return(list1)
+}
+
+nest_year_pre_cohort_final <- nest_year_pre_cohort_final %>%
+  dplyr::mutate('PC_list_j_final' = purrr::map(PC_list_j, func_select_PC_list))
+
+nest_year_pre_cohort_regression <- nest_year_pre_cohort_final %>%
+  dplyr::select(Year, LHS_pre_cohort, PC_list_j_final) %>%
+  dplyr::mutate('LHS_pre_cohort_final' = purrr::map(LHS_pre_cohort,
+                                                    function(df){return(df[, name_country_pre_cohort])})) %>%
+  dplyr::select(-LHS_pre_cohort)
+
+func_pre_cohort_regress <- function(df1, list)
+{
+  div_list <- list(NULL)
+  
+  for (i in 1:ncol(df1))
+  {
+    df2 <- list[[i]]
+    
+    temp_lhs <- df1[, i]
+    temp_rhs <- as.matrix(df2)
+    
+    lm_summary <- summary(lm(formula = temp_lhs ~ temp_rhs))
+    adj_rsq <- max(lm_summary$adj.r.squared, 0)
+    div_list[[i]] <- 100*(1 - adj_rsq)
+  }
+   
+  return(unlist(div_list))
+}
+
+nest_year_pre_cohort_regression <- nest_year_pre_cohort_regression %>%
+  dplyr::filter(purrr::map(PC_list_j_final, length) > 0) %>%
+  dplyr::mutate('Div_ind_pre_cohort' = purrr::map2(LHS_pre_cohort_final, PC_list_j_final,
+                                                   func_pre_cohort_regress))
+
+func_attach_name_pre_cohort <- function(vec)
+{
+  names(vec) <- name_country_pre_cohort
+  return(vec)
+}
+
+nest_year_pre_cohort_regression <- nest_year_pre_cohort_regression %>%
+  dplyr::mutate('Div_ind_pre_cohort_name' = purrr::map(Div_ind_pre_cohort,
+                                                       func_attach_name_pre_cohort))
+
+# Unnest results in long format
+list_unnest_div_pre_cohort <- nest_year_pre_cohort_regression %>%
+  dplyr::mutate('Country' = purrr::map(Div_ind_pre_cohort_name, func_pick_name)) %>%
+  dplyr::select(Year, Div_ind_pre_cohort_name, Country) %>%
+  tidyr::unnest(.)
+
+# Spread in wide format
+Div_ind_pre_cohort <- list_unnest_div_pre_cohort %>%
+  tidyr::spread(key = Country, value = Div_ind_pre_cohort_name) 
+
+# Full dataframe for all countries
+Div_ind_full_long <- dplyr::full_join(Div_ind_ordinary, Div_ind_pre_cohort,
+                                      by = c('Year')) %>%
+  tidyr::gather(., Argentina:US, key = 'Country', value = 'Div_Index') %>%
+  dplyr::arrange(Country)
+
+#Div_ind_full_wide <- 
+
+
 # readr::write_csv(Div_ind_ordinary, 'Diversification_regular_countries.csv')
