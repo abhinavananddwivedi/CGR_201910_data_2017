@@ -149,8 +149,8 @@ func_pc_90 <- function(vec)
 
 # How many PCs needed for explaining 90% of variation?
 num_pc_90 <- sapply(nest_year_return_LHS_RHS$Share, func_pc_90)
-# num_pc_equity <- median(num_pc_90) # 12 are enough
-num_pc_equity <- max(num_pc_90) # At John's suggestion
+num_pc_equity <- median(num_pc_90) # 12 are enough
+# num_pc_equity <- max(num_pc_90) # At John's suggestion
 
 ### PC computation for ordinary countries ###
 
@@ -253,7 +253,7 @@ func_rm_col_j <- function(df)
   
   for (j in 1:ncol(df))
   {
-    temp_list[[j]] <- df[, -j]
+    temp_list[[j]] <- df[, -j] #remove column j
   }
   
   return(temp_list)
@@ -262,25 +262,42 @@ func_rm_col_j <- function(df)
 # Generate sequence of matrices with each column removed once
 nest_year_pre_cohort <- nest_year_pre_cohort %>%
   dplyr::mutate('RHS_country_j' = purrr::map(RHS_countries, func_rm_col_j)) %>%
-  dplyr::select(-LHS_country_valid)
+  dplyr::select(-c(LHS_country_valid, LHS_clean))
 
-func_eig_val_list <- function(temp_list)
+func_eig_val_list <- function(list)
 {
-  eig_val_list <- purrr::map(temp_list, 
-                             function(df){return(eigen(df)$values)})
+  # This function accepts a list of matrices and
+  # applies to each matrix, a function that computes
+  # its eigenvalues, then returns the list of 
+  # eigenvalues for each matrix in the list
+  func_eig_val_df <- function(df)
+  {
+    return(eigen(df)$values)
+  }
+  eig_val_list <- purrr::map(list, func_eig_val_df)
+  
   return(eig_val_list)
 }
 
-func_eig_vec_list <- function(temp_list)
+func_eig_vec_list <- function(list)
 {
-  eig_vec_list <- purrr::map(temp_list, 
-                             function(df){return(eigen(df)$vectors)})
+  # This function accepts a list of matrices and
+  # applies to each matrix, a function that computes
+  # its eigenvectors, then returns the list of 
+  # eigenvectors for each matrix in the list
+  func_eig_vec_df <- function(df)
+  {
+    return(eigen(df)$vectors)
+  }
+  
+  eig_vec_list <- purrr::map(list, func_eig_vec_df)
+  
   return(eig_vec_list)
 }
 
 nest_year_pre_cohort <- nest_year_pre_cohort %>%
   dplyr::mutate('Cov_list_j' = purrr::map(RHS_country_j, 
-                                          function(temp_list){return(purrr::map(temp_list, cov))})) %>%
+                                          function(list){return(purrr::map(list, cov))})) %>%
   dplyr::mutate('Eig_val_list_j' = purrr::map(Cov_list_j, func_eig_val_list)) %>%
   dplyr::mutate('Eig_vec_list_j' = purrr::map(Cov_list_j, func_eig_vec_list)) %>%
   dplyr::mutate('Lag_eig_vec_list_j' = dplyr::lag(Eig_vec_list_j))
@@ -290,9 +307,12 @@ nest_year_pre_cohort_final <- nest_year_pre_cohort %>%
 
 func_list_multiply <- function(list1, list2)
 {
+  # This function accepts two lists of matrices
+  # then multiplies matrix i in list 1 to matrix i
+  # in list 2 and returns the output as another list
   func_df_mult <- function(df1, df2)
   {
-    return(df1%*%df2)
+    return(df1%*%df2) #note matrix multiplication %*%
   }
   
   list3 <- purrr::map2(list1, list2, func_df_mult)
