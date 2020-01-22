@@ -155,7 +155,9 @@ num_pc_90 <- sapply(nest_year_return_LHS_RHS$Share, func_pc_90)
 num_pc_equity <- median(num_pc_90) # 12 are enough
 # num_pc_equity <- max(num_pc_90) # At John's suggestion
 
+#############################################
 ### PC computation for ordinary countries ###
+#############################################
 
 # Compute PCs
 nest_year_return_LHS_RHS <- nest_year_return_LHS_RHS %>%
@@ -236,7 +238,9 @@ list_unnest_div_ordinary <- nest_year_regression %>%
 Div_ind_ordinary <- list_unnest_div_ordinary %>%
   tidyr::spread(key = Country, value = Div_ind_edit) 
 
+###############################################
 ### PC computation for pre cohort countries ###
+###############################################
 
 nest_year_pre_cohort <- nest_year_return %>%
   dplyr::select(Year, LHS_country_valid) %>%
@@ -306,9 +310,6 @@ nest_year_pre_cohort <- nest_year_pre_cohort %>%
   dplyr::mutate('Eig_vec_list_j' = purrr::map(Cov_list_j, func_eig_vec_list)) %>%
   dplyr::mutate('Lag_eig_vec_list_j' = dplyr::lag(Eig_vec_list_j))
 
-# nest_year_pre_cohort_final <- nest_year_pre_cohort %>%
-#   dplyr::select(Year, LHS_pre_cohort, RHS_country_j, Lag_eig_vec_list_j)
-
 nest_year_pre_cohort_final <- nest_year_pre_cohort %>%
   dplyr::select(Year, LHS_pre_cohort, RHS_country_j, 
                 Eig_vec_list_j, Lag_eig_vec_list_j)
@@ -330,7 +331,7 @@ func_list_multiply <- function(list1, list2)
 }
 
 nest_year_pre_cohort_final <- nest_year_pre_cohort_final %>%
-  dplyr::filter(Year > 1986) %>%
+  dplyr::filter(Year > 1986) %>% #Year 86 has incommensurate list lengths
   dplyr::mutate('PC_list_j' = purrr::map2(RHS_country_j, Lag_eig_vec_list_j,
                                           func_list_multiply))
 
@@ -345,6 +346,9 @@ nest_year_pre_cohort_final <- nest_year_pre_cohort_final %>%
 
 func_select_PC_list <- function(list)
 {
+  # This function accepts a list of PCs matrices and 
+  # returns the list with each PC matrix with 
+  # number of columns from 1 to num_pc_equity
   func_select_PC_df <- function(df)
   {
     return(df[, 1:num_pc_equity])
@@ -358,6 +362,7 @@ func_select_PC_list <- function(list)
 nest_year_pre_cohort_final <- nest_year_pre_cohort_final %>%
   dplyr::mutate('PC_list_j_final' = purrr::map(PC_list_j, func_select_PC_list))
 
+# Isolating LHS and RHS variables for PC regression
 nest_year_pre_cohort_regression <- nest_year_pre_cohort_final %>%
   dplyr::select(Year, LHS_pre_cohort, PC_list_j_final) %>%
   dplyr::mutate('LHS_pre_cohort_final' = purrr::map(LHS_pre_cohort,
@@ -366,6 +371,9 @@ nest_year_pre_cohort_regression <- nest_year_pre_cohort_final %>%
 
 func_pre_cohort_regress <- function(df1, list)
 {
+  # This function accepts the matrix of LHS countries
+  # and the list of RHS matrices, then returns the 
+  # diversification index for each country
   div_list <- list(NULL)
   
   for (i in 1:ncol(df1))
@@ -423,8 +431,8 @@ Div_ind_full_wide <- Div_ind_full_wide %>%
   tibble::add_column('Year' = unique(Div_ind_full_long$Year)) %>%
   dplyr::select(Year, World_mean, everything(.))
 
-ggplot(data = Div_ind_full_wide) +
-  geom_line(mapping = aes(Year, World_mean)) +
-  theme_bw()
+# ggplot(data = Div_ind_full_wide) +
+#   geom_line(mapping = aes(Year, World_mean)) +
+#   theme_bw()
 
 # readr::write_csv(Div_ind_ordinary, 'Diversification_regular_countries.csv')
