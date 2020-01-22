@@ -69,7 +69,8 @@ func_valid_ret <- function(df, n = num_equity_usable)
 nest_year_return <- nest_year_return %>%
   dplyr::mutate('LHS_country_valid' = purrr::map(data, func_valid_ret))
 
-year_cohort <- 1986
+# year_cohort <- 1986
+year_cohort <- 1985
 
 func_rm_full_NA <- function(df)
 {
@@ -98,7 +99,9 @@ func_select_pre_cohort <- function(df)
   # and returns the pre86 cohort with the one-day
   # lags of US and Canada---to be used for the 
   # computation of principal components
-  return(df[, c(name_country_pre_cohort, 'Canada_lag', 'US_lag')])
+  
+  return(df[, c(dplyr::intersect(colnames(df), name_country_pre_cohort), 
+                'Canada_lag', 'US_lag')])
 }
 
 func_select_ordinary <- function(df)
@@ -248,10 +251,10 @@ func_rm_col_j <- function(df)
 {
   # This function accepts a data matrix and generates 
   # a sequence of matrices each one missing one 
-  # column at a time
+  # column at a time (excluding lags of Canada and US)
   temp_list <- list(NULL)
   
-  for (j in 1:ncol(df))
+  for (j in 1:(ncol(df) - 2))
   {
     temp_list[[j]] <- df[, -j] #remove column j
   }
@@ -269,11 +272,12 @@ func_eig_val_list <- function(list)
   # This function accepts a list of matrices and
   # applies to each matrix, a function that computes
   # its eigenvalues, then returns the list of 
-  # eigenvalues for each matrix in the list
+  # eigenvalues---one for each matrix in the list
   func_eig_val_df <- function(df)
   {
     return(eigen(df)$values)
   }
+  
   eig_val_list <- purrr::map(list, func_eig_val_df)
   
   return(eig_val_list)
@@ -284,7 +288,7 @@ func_eig_vec_list <- function(list)
   # This function accepts a list of matrices and
   # applies to each matrix, a function that computes
   # its eigenvectors, then returns the list of 
-  # eigenvectors for each matrix in the list
+  # eigenvectors---one for each matrix in the list
   func_eig_vec_df <- function(df)
   {
     return(eigen(df)$vectors)
@@ -302,8 +306,12 @@ nest_year_pre_cohort <- nest_year_pre_cohort %>%
   dplyr::mutate('Eig_vec_list_j' = purrr::map(Cov_list_j, func_eig_vec_list)) %>%
   dplyr::mutate('Lag_eig_vec_list_j' = dplyr::lag(Eig_vec_list_j))
 
+# nest_year_pre_cohort_final <- nest_year_pre_cohort %>%
+#   dplyr::select(Year, LHS_pre_cohort, RHS_country_j, Lag_eig_vec_list_j)
+
 nest_year_pre_cohort_final <- nest_year_pre_cohort %>%
-  dplyr::select(Year, LHS_pre_cohort, RHS_country_j, Lag_eig_vec_list_j)
+  dplyr::select(Year, LHS_pre_cohort, RHS_country_j, 
+                Eig_vec_list_j, Lag_eig_vec_list_j)
 
 func_list_multiply <- function(list1, list2)
 {
@@ -322,9 +330,18 @@ func_list_multiply <- function(list1, list2)
 }
 
 nest_year_pre_cohort_final <- nest_year_pre_cohort_final %>%
+  dplyr::filter(Year > 1986) %>%
   dplyr::mutate('PC_list_j' = purrr::map2(RHS_country_j, Lag_eig_vec_list_j,
                                           func_list_multiply))
 
+# nest_year_pre_cohort_final <- nest_year_pre_cohort_final %>%
+#   dplyr::filter(purrr::map(Lag_eig_vec_list_j, length) > 0) %>%
+#   dplyr::mutate('PC_list_j' = dplyr::case_when(Year > 1986 ~ purrr::map2(RHS_country_j, 
+#                                                                          Lag_eig_vec_list_j,
+#                                                                          func_list_multiply)),
+#                                                TRUE ~ purrr::map2(RHS_country_j, #equivalent to ELSE
+#                                                                   Eig_vec_list_j,
+#                                                                   func_list_multiply))
 
 func_select_PC_list <- function(list)
 {
@@ -397,7 +414,17 @@ Div_ind_full_long <- dplyr::full_join(Div_ind_ordinary, Div_ind_pre_cohort,
   tidyr::gather(., Argentina:US, key = 'Country', value = 'Div_Index') %>%
   dplyr::arrange(Country)
 
-#Div_ind_full_wide <- 
+Div_ind_full_wide <- Div_ind_full_long %>%
+  tidyr::spread(key = 'Country', value = 'Div_Index') 
 
+Div_ind_full_wide <- Div_ind_full_wide %>%
+  dplyr::select(-Year) %>%
+  dplyr::mutate('World_mean' = rowMeans(., na.rm = T)) %>%
+  tibble::add_column('Year' = unique(Div_ind_full_long$Year)) %>%
+  dplyr::select(Year, World_mean, everything(.))
+
+ggplot(data = Div_ind_full_wide) +
+  geom_line(mapping = aes(Year, World_mean)) +
+  theme_bw()
 
 # readr::write_csv(Div_ind_ordinary, 'Diversification_regular_countries.csv')
