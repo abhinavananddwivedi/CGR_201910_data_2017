@@ -24,7 +24,7 @@ file_script <- "CGR_Panel_Reg_Add_201707_Tidyread.R" # Read tidily
 #file_path_script <- paste0(folder, "/", file_script)
 
 #source(file_path_script, echo = F) # Read and parse original data files
-source(file_script, echo = F) # Read and parse original data files
+source(file_script, echo = F) # Read and parse original data filesr
 
 ##fefe
 

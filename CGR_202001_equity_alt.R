@@ -70,6 +70,7 @@ nest_year_return <- df_equity_return %>%
 
 # How many valid returns to use per year?
 num_equity_usable <- 50
+#num_equity_usable <- 100
 
 func_valid_ret <- function(df, n = num_equity_usable)
 {
@@ -175,8 +176,8 @@ func_pc_90 <- function(vec)
 
 # How many PCs needed for explaining 90% of variation?
 num_pc_90 <- sapply(nest_year_return_LHS_RHS$Share, func_pc_90)
-# num_pc_equity <- median(num_pc_90) # 12 are enough
-num_pc_equity <- max(num_pc_90) # At John's suggestion
+num_pc_equity <- median(num_pc_90) # 12 are enough
+# num_pc_equity <- max(num_pc_90) # At John's suggestion
 
 #############################################
 ### PC computation for ordinary countries ###
@@ -391,11 +392,6 @@ func_select_PC_list <- function(list)
 nest_year_pre_cohort_regress <- nest_year_pre_cohort_regress %>%
   dplyr::mutate('PC_list_j_final' = purrr::map(PC_list_j, func_select_PC_list))
 
-# Isolating LHS and RHS variables for PC regression
-nest_year_pre_cohort_regress <- nest_year_pre_cohort_regress %>%
-  dplyr::mutate('LHS_pre_cohort_final' = purrr::map(LHS_pre_cohort,
-                                                    function(df){return(df[, name_country_pre_cohort])})) %>%
-  dplyr::select(-LHS_pre_cohort)
 
 func_pre_cohort_regress <- function(df1, list)
 {
@@ -419,9 +415,10 @@ func_pre_cohort_regress <- function(df1, list)
   return(unlist(div_list))
 }
 
+
 nest_year_pre_cohort_regress <- nest_year_pre_cohort_regress %>%
   dplyr::filter(purrr::map(PC_list_j_final, length) > 0) %>%
-  dplyr::mutate('Div_ind_pre_cohort' = purrr::map2(LHS_pre_cohort_final, PC_list_j_final,
+  dplyr::mutate('Div_ind_pre_cohort' = purrr::map2(LHS_pre_cohort, PC_list_j_final,
                                                    func_pre_cohort_regress))
 
 func_attach_name_pre_cohort <- function(vec)
@@ -462,7 +459,7 @@ Div_ind_full_wide <- Div_ind_full_wide %>%
 Div_ind_plot <- ggplot(data = Div_ind_full_wide, 
                        mapping = aes(Year, World_mean)) +
   geom_line() +
-  geom_smooth(method = lm)
+  geom_smooth(method = lm) +
   theme_bw()
 
 
