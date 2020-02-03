@@ -28,18 +28,6 @@ nest_panel_common <- panel_common %>%
   dplyr::group_by(Country) %>%
   tidyr::nest()
 
-# panel_common_pre00 <- panel_common %>%
-#   dplyr::filter(Year <= 2000)
-# nest_panel_common_pre00 <- panel_common_pre00 %>%
-#   dplyr::group_by(Country) %>%
-#   tidyr::nest()
-# 
-# panel_common_post00 <- panel_common %>%
-#   dplyr::filter(Year > 2000)
-# nest_panel_common_post00 <- panel_common_post00 %>%
-#   dplyr::group_by(Country) %>%
-#   tidyr::nest()
-
 form_common <- Div ~ TED + VIX + SENT + FEDFUNDS + INTERNET + ERM + EZ
 
 func_div_ols <- function(df, formula = form_common)
@@ -66,7 +54,7 @@ func_div_trend <- function(df, formula = form_trend)
   return(summary(lm(data = data_matrix, formula = form_trend)))
 }
 
-func_extract_lm_summary <- function(lm_summary)
+func_extract_trend_summary <- function(lm_summary)
 {
   lm_coeff <- lm_summary$coefficients
   name_select <- c('Estimate', 't value', 'Pr(>|t|)')
@@ -76,34 +64,31 @@ func_extract_lm_summary <- function(lm_summary)
   return(lm_trend)
 }
 
+func_extract_ols_summary <- function(lm_summary)
+{
+  lm_coeff <- lm_summary$coefficients
+  name_select <- c('Estimate', 't value', 'Pr(>|t|)')
+  
+  lm_trend <- lm_coeff[, dplyr::intersect(name_select, colnames(lm_coeff))]
+  
+  return(lm_trend)
+}
+
 ### OLS ###
 
 nest_panel_common <- nest_panel_common %>%
   dplyr::mutate('summary_ols' = purrr::map(data, func_div_ols),
                 'summary_trend' = purrr::map(data, func_div_trend))
-# nest_panel_common_pre00 <- nest_panel_common_pre00 %>%
-#   dplyr::mutate('summary_ols' = purrr::map(data, func_div_ols),
-#                 'summary_trend' = purrr::map(data, func_div_trend))
-# nest_panel_common_post00 <- nest_panel_common_post00 %>%
-#   dplyr::mutate('summary_ols' = purrr::map(data, func_div_ols),
-#                 'summary_trend' = purrr::map(data, func_div_trend))
-
 
 ### Trends ###
 
 temp_trend <- sapply(nest_panel_common$summary_trend, 
-                      func_extract_lm_summary)
+                      func_extract_trend_summary)
 colnames(temp_trend) <- name_country_full
 trend_matrix_full <- t(temp_trend)
 
-# temp_trend_pre00 <- sapply(nest_panel_common_pre00$summary_trend,
-#                            func_extract_lm_summary)
-# colnames(temp_trend_pre00) <- name_country_full
-# trend_matrix_pre00 <- t(temp_trend_pre00)
-# 
-# temp_trend_post00 <- sapply(nest_panel_common_post00$summary_trend,
-#                            func_extract_lm_summary)
-# colnames(temp_trend_post00) <- name_country_full
-# trend_matrix_post00 <- t(temp_trend_post00)
+temp_ols <- sapply(nest_panel_common$summary_ols,
+                   func_extract_ols_summary)
+names(temp_ols) <- name_country_full
 
-# 
+ 
