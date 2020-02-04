@@ -97,19 +97,23 @@ func_extract_ols_summary <- function(lm_summary)
 
 ### OLS and Trends ###
 
+func_div_count_NA <- function(df)
+{
+  return(sum(is.na(df$Div_Index)/nrow(df)))
+}
+
 nest_panel_common <- nest_panel_common %>%
-  dplyr::mutate('summary_ols' = purrr::map(data, func_div_ols),
-                'summary_trend' = purrr::map(data, func_div_trend),
-                'summary_trend_NW' = purrr::map(data, func_div_trend_NW))
+  dplyr::mutate('Div_NA_fraction' = purrr::map_dbl(data, func_div_count_NA)) %>%
+  dplyr::mutate('summary_trend' = purrr::map(data, func_div_trend),
+                'summary_trend_NW' = purrr::map(data, func_div_trend_NW)) 
 
-temp_trend <- sapply(nest_panel_common$summary_trend, 
-                      func_extract_trend_summary)
-colnames(temp_trend) <- name_country_full
-trend_matrix_full <- t(temp_trend) 
+nest_panel_common_OLS <- nest_panel_common %>%
+  dplyr::filter(Div_NA_fraction < 0.75) %>%
+  dplyr::mutate('summary_ols' = purrr::map(data, func_div_ols))
 
-temp_ols <- sapply(nest_panel_common$summary_ols,
+temp_ols <- sapply(nest_panel_common_OLS$summary_ols,
                    func_extract_ols_summary)
-names(temp_ols) <- name_country_full # Write out as .csv file
+names(temp_ols) <- nest_panel_common_OLS$Country # Write out as .csv file
 
 temp_trend_NW <- purrr::map(nest_panel_common$summary_trend_NW,
                             func_extract_trend_summary)
@@ -137,18 +141,22 @@ name_country_emerging <- dplyr::setdiff(name_country_full, name_country_develope
 # Developed countries: OLS and trends
 nest_panel_common_dev <- nest_panel_common %>%
   dplyr::filter(Country %in% name_country_developed) %>%
-  dplyr::select(Country, data) %>%
-  dplyr::mutate('summary_ols' = purrr::map(data, func_div_ols),
-                'summary_trend' = purrr::map(data, func_div_trend),
+  dplyr::select(Country, data, Div_NA_fraction) %>%
+  dplyr::mutate('summary_trend' = purrr::map(data, func_div_trend),
                 'summary_trend_NW' = purrr::map(data, func_div_trend_NW))
 
-temp_ols_dev <- sapply(nest_panel_common_dev$summary_ols,
+
+nest_panel_common_dev_OLS <- nest_panel_common_dev %>%
+  dplyr::filter(Div_NA_fraction < 0.75) %>%
+  dplyr::mutate('summary_ols' = purrr::map(data, func_div_ols))
+
+temp_ols_dev_OLS <- sapply(nest_panel_common_dev_OLS$summary_ols,
                    func_extract_ols_summary)
-names(temp_ols_dev) <- name_country_developed # Write out as .csv file
+names(temp_ols_dev_OLS) <- nest_panel_common_dev_OLS$Country # Write out as .csv file
 
 temp_trend_dev_NW <- purrr::map(nest_panel_common_dev$summary_trend_NW,
                             func_extract_trend_summary)
-names(temp_trend_dev_NW) <- name_country_developed
+names(temp_trend_dev_NW) <- nest_panel_common_dev$Country 
 trend_matrix_dev_NW <- t(as.data.frame(temp_trend_dev_NW)) # Write out as .csv file
 
 
@@ -156,13 +164,12 @@ trend_matrix_dev_NW <- t(as.data.frame(temp_trend_dev_NW)) # Write out as .csv f
 nest_panel_common_emerging <- nest_panel_common %>%
   dplyr::filter(Country %in% name_country_emerging) %>%
   dplyr::select(Country, data) %>%
-  dplyr::mutate('summary_ols' = purrr::map(data, func_div_ols),
-                'summary_trend' = purrr::map(data, func_div_trend),
+  dplyr::mutate('summary_trend' = purrr::map(data, func_div_trend),
                 'summary_trend_NW' = purrr::map(data, func_div_trend_NW))
 
-temp_ols_emerg <- sapply(nest_panel_common_emerging$summary_ols,
-                       func_extract_ols_summary)
-names(temp_ols_emerg) <- name_country_emerging # Write out as .csv file
+# temp_ols_emerg <- sapply(nest_panel_common_emerging$summary_ols,
+#                        func_extract_ols_summary)
+# names(temp_ols_emerg) <- name_country_emerging # Write out as .csv file
 
 temp_trend_emerg_NW <- purrr::map(nest_panel_common_emerging$summary_trend_NW,
                                 func_extract_trend_summary)
