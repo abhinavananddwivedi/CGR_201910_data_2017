@@ -6,7 +6,7 @@ library(sandwich)
 
 name_script_file <- "CGR_202001_equity_alt.R"
 
-source(name_script_file, echo = F) # Read and parse original data files
+source(name_script_file, echo = F) # Compute diversification using original data
 
 summ_stat_div <- apply(Div_ind_full_wide[, - 1], 2, summary)
 
@@ -38,7 +38,7 @@ func_div_ols <- function(df, formula = form_common)
   
   data_matrix <- data.frame(Div = lhs, rhs_tib)
   
-  lm_summary <- summary(lm(data = data_matrix, formula = form_common))
+  lm_summary <- summary(lm(data = data_matrix, formula))
   return(lm_summary)
 }
 
@@ -51,7 +51,7 @@ func_div_trend <- function(df, formula = form_trend)
   
   data_matrix <- data.frame(Div = lhs$Div_Index, Year = rhs$Year)
   
-  return(summary(lm(data = data_matrix, formula = form_trend)))
+  return(summary(lm(data = data_matrix, formula)))
 }
 
 # func_trend_NW <- function(df, formula = form_trend)
@@ -91,26 +91,91 @@ func_extract_ols_summary <- function(lm_summary)
   return(lm_trend)
 }
 
-### OLS ###
+### OLS and Trends ###
 
 nest_panel_common <- nest_panel_common %>%
   dplyr::mutate('summary_ols' = purrr::map(data, func_div_ols),
                 'summary_trend' = purrr::map(data, func_div_trend))
-
-### Trends ###
 
 temp_trend <- sapply(nest_panel_common$summary_trend, 
                       func_extract_trend_summary)
 colnames(temp_trend) <- name_country_full
 trend_matrix_full <- t(temp_trend)
 
-# temp_trend_NW <- sapply(nest_panel_common$summary_trend_NW, func_extract_trend_summary)
-# colnames(temp_trend_NW) <- name_country_full
-# trend_matrix_full_NW <- t(temp_trend_NW)
-
-
 temp_ols <- sapply(nest_panel_common$summary_ols,
                    func_extract_ols_summary)
 names(temp_ols) <- name_country_full
 
- 
+#########################################
+### By countries: developed, emerging ###
+#########################################
+
+name_country_developed <-  c('Argentina', 'Australia', 'Austria', 
+                             'Bahrain', 'Belgium', 'Canada', 'Chile', 
+                             'Croatia', 'Cyprus', 'Czech Rep.', 'Denmark', 
+                             'Estonia',  'Finland', 'France', 'Germany', 
+                             'Greece', 'Hong Kong', 'Hungary', 'Iceland', 
+                             'Ireland', 'Israel', 'Italy', 'Japan', 'Kuwait', 
+                             'Latvia', 'Lithuania', 'Luxembourg', 'Malta', 
+                             'Netherlands', 'New Zealand', 'Norway', 'Poland', 
+                             'Portugal', 'Qatar', 'Saudi Arabia', 'Singapore', 
+                             'Slovakia', 'Slovenia', 'Spain', 'Sweden', 
+                             'Switzerland', 'UAE', 'UK', 'US')
+
+name_country_emerging <- dplyr::setdiff(name_country_full, name_country_developed)
+
+# Developed countries: OLS and trends
+nest_panel_common_dev <- nest_panel_common %>%
+  dplyr::filter(Country %in% name_country_developed) %>%
+  dplyr::select(Country, data) %>%
+  dplyr::mutate('summary_ols' = purrr::map(data, func_div_ols),
+                'summary_trend' = purrr::map(data, func_div_trend))
+
+temp_trend_dev <- sapply(nest_panel_common_dev$summary_trend, 
+                     func_extract_trend_summary)
+colnames(temp_trend_dev) <- name_country_developed
+trend_matrix_dev <- t(temp_trend_dev)
+
+temp_ols_dev <- sapply(nest_panel_common_dev$summary_ols,
+                   func_extract_ols_summary)
+names(temp_ols_dev) <- name_country_developed
+
+# Emerging countries: OLS and trends
+nest_panel_common_emerging <- nest_panel_common %>%
+  dplyr::filter(Country %in% name_country_emerging) %>%
+  dplyr::select(Country, data) %>%
+  dplyr::mutate('summary_ols' = purrr::map(data, func_div_ols),
+                'summary_trend' = purrr::map(data, func_div_trend))
+
+temp_trend_emerg <- sapply(nest_panel_common_emerging$summary_trend, 
+                         func_extract_trend_summary)
+colnames(temp_trend_emerg) <- name_country_emerging
+trend_matrix_emerg <- t(temp_trend_emerg)
+
+temp_ols_emerg <- sapply(nest_panel_common_emerging$summary_ols,
+                       func_extract_ols_summary)
+names(temp_ols_emerg) <- name_country_emerging
+
+#######################################
+### By year: pre-2000 and post 2000 ###
+#######################################
+
+func_pre00 <- function(df)
+{
+  return(dplyr::filter(df, Year <= 2000))
+}
+
+func_post00 <- function(df)
+{
+  return(dplyr::filter(df, Year > 2000))
+}
+
+nest_panel_pre_post <- nest_panel_common %>%
+  dplyr::select(Country, data) %>%
+  dplyr::mutate('Pre_2000' = purrr::map(data, func_pre00),
+                'Post_2000' = purrr::map(data, func_post00))
+
+nest_panel_pre_post_results <- nest_panel_pre_post %>%
+  dplyr::select(-data) %>%
+  dplyr::mutate('summary_ols_post00' = purrr::map(Post_2000, func_div_ols),
+                'summary_trend_post00' = purrr::map(Post_2000, func_div_trend))
