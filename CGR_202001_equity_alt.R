@@ -490,7 +490,7 @@ Div_ind_full_wide <- Div_ind_full_wide %>%
   dplyr::select(Year, Div_world_mean, everything())
 
 Div_ind_plot <- ggplot(data = Div_ind_full_wide, 
-                       mapping = aes(Year, World_mean)) +
+                       mapping = aes(Year, Div_world_mean)) +
   geom_line() +
   geom_smooth(method = lm) +
   theme_bw()

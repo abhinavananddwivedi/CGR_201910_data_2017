@@ -1,4 +1,4 @@
-### Results and Analysis for CGR ###
+### Results and Analysis for CGR 202002 ###
 
 library(tidyverse)
 library(lmtest)
@@ -54,29 +54,33 @@ func_div_trend <- function(df, formula = form_trend)
   return(summary(lm(data = data_matrix, formula)))
 }
 
-# func_trend_NW <- function(df, formula = form_trend)
-# {
-#   # This function computes the linear trend and reports
-#   # heteroskedasticity and autocorrelation consistent errors
-#   # according to Newey West
-#   lhs <- dplyr::select(df, Div_Index)
-#   rhs <- dplyr::select(df, Year)
-#   
-#   data.matrix <- data.frame(Div = lhs$Div_Index, Year = rhs$Year)
-#   
-#   lm_summ <- summary(lm(data = data.matrix, formula = form_trend))
-#   vcov_err <- sandwich::NeweyWest(lm_summ)
-#   lm_summ$coefficients <- unclass(lmtest::coeftest(lm_summ, vcov. = vcov_err))
-#   
-#   return(lm_summ)
-# }
+func_div_trend_NW <- function(df, formula = form_trend)
+{
+  # This function computes the linear trend and reports
+  # heteroskedasticity and autocorrelation consistent errors
+  # according to Newey West
+  lhs <- dplyr::select(df, Div_Index)
+  rhs <- dplyr::select(df, Year)
+
+  data.matrix <- data.frame(Div = lhs$Div_Index, 
+                            Year = rhs$Year)
+
+  lm_div <- lm(data = data.matrix, formula)
+  lm_summ <- summary(lm_div)
+  vcov_err <- sandwich::NeweyWest(lm_div, lag = 1, prewhite = F, adjust = T)
+  lm_summ$coefficients <- unclass(lmtest::coeftest(lm_div, 
+                                                   vcov. = vcov_err))
+
+  return(lm_summ)
+}
 
 func_extract_trend_summary <- function(lm_summary)
 {
   lm_coeff <- lm_summary$coefficients
   name_select <- c('Estimate', 't value', 'Pr(>|t|)')
   
-  lm_trend <- lm_coeff['Year', dplyr::intersect(name_select, colnames(lm_coeff))]
+  #lm_trend <- lm_coeff['Year', dplyr::intersect(name_select, colnames(lm_coeff))]
+  lm_trend <- lm_coeff[2, dplyr::intersect(name_select, colnames(lm_coeff))]
   
   return(lm_trend)
 }
@@ -86,25 +90,31 @@ func_extract_ols_summary <- function(lm_summary)
   lm_coeff <- lm_summary$coefficients
   name_select <- c('Estimate', 't value', 'Pr(>|t|)')
   
-  lm_trend <- lm_coeff[, dplyr::intersect(name_select, colnames(lm_coeff))]
+  lm_ols <- lm_coeff[, dplyr::intersect(name_select, colnames(lm_coeff))]
   
-  return(lm_trend)
+  return(lm_ols)
 }
 
 ### OLS and Trends ###
 
 nest_panel_common <- nest_panel_common %>%
   dplyr::mutate('summary_ols' = purrr::map(data, func_div_ols),
-                'summary_trend' = purrr::map(data, func_div_trend))
+                'summary_trend' = purrr::map(data, func_div_trend),
+                'summary_trend_NW' = purrr::map(data, func_div_trend_NW))
 
 temp_trend <- sapply(nest_panel_common$summary_trend, 
                       func_extract_trend_summary)
 colnames(temp_trend) <- name_country_full
-trend_matrix_full <- t(temp_trend)
+trend_matrix_full <- t(temp_trend) 
 
 temp_ols <- sapply(nest_panel_common$summary_ols,
                    func_extract_ols_summary)
-names(temp_ols) <- name_country_full
+names(temp_ols) <- name_country_full # Write out as .csv file
+
+temp_trend_NW <- purrr::map(nest_panel_common$summary_trend_NW,
+                            func_extract_trend_summary)
+names(temp_trend_NW) <- name_country_full
+trend_matrix_full_NW <- t(as.data.frame(temp_trend_NW)) # Write out as .csv file
 
 #########################################
 ### By countries: developed, emerging ###
@@ -129,32 +139,36 @@ nest_panel_common_dev <- nest_panel_common %>%
   dplyr::filter(Country %in% name_country_developed) %>%
   dplyr::select(Country, data) %>%
   dplyr::mutate('summary_ols' = purrr::map(data, func_div_ols),
-                'summary_trend' = purrr::map(data, func_div_trend))
-
-temp_trend_dev <- sapply(nest_panel_common_dev$summary_trend, 
-                     func_extract_trend_summary)
-colnames(temp_trend_dev) <- name_country_developed
-trend_matrix_dev <- t(temp_trend_dev)
+                'summary_trend' = purrr::map(data, func_div_trend),
+                'summary_trend_NW' = purrr::map(data, func_div_trend_NW))
 
 temp_ols_dev <- sapply(nest_panel_common_dev$summary_ols,
                    func_extract_ols_summary)
-names(temp_ols_dev) <- name_country_developed
+names(temp_ols_dev) <- name_country_developed # Write out as .csv file
+
+temp_trend_dev_NW <- purrr::map(nest_panel_common_dev$summary_trend_NW,
+                            func_extract_trend_summary)
+names(temp_trend_dev_NW) <- name_country_developed
+trend_matrix_dev_NW <- t(as.data.frame(temp_trend_dev_NW)) # Write out as .csv file
+
 
 # Emerging countries: OLS and trends
 nest_panel_common_emerging <- nest_panel_common %>%
   dplyr::filter(Country %in% name_country_emerging) %>%
   dplyr::select(Country, data) %>%
   dplyr::mutate('summary_ols' = purrr::map(data, func_div_ols),
-                'summary_trend' = purrr::map(data, func_div_trend))
-
-temp_trend_emerg <- sapply(nest_panel_common_emerging$summary_trend, 
-                         func_extract_trend_summary)
-colnames(temp_trend_emerg) <- name_country_emerging
-trend_matrix_emerg <- t(temp_trend_emerg)
+                'summary_trend' = purrr::map(data, func_div_trend),
+                'summary_trend_NW' = purrr::map(data, func_div_trend_NW))
 
 temp_ols_emerg <- sapply(nest_panel_common_emerging$summary_ols,
                        func_extract_ols_summary)
-names(temp_ols_emerg) <- name_country_emerging
+names(temp_ols_emerg) <- name_country_emerging # Write out as .csv file
+
+temp_trend_emerg_NW <- purrr::map(nest_panel_common_emerging$summary_trend_NW,
+                                func_extract_trend_summary)
+names(temp_trend_emerg_NW) <- name_country_emerging
+trend_matrix_emerg_NW <- t(as.data.frame(temp_trend_emerg_NW)) # Write out as .csv file
+
 
 #######################################
 ### By year: pre-2000 and post 2000 ###
@@ -178,4 +192,16 @@ nest_panel_pre_post <- nest_panel_common %>%
 nest_panel_pre_post_results <- nest_panel_pre_post %>%
   dplyr::select(-data) %>%
   dplyr::mutate('summary_ols_post00' = purrr::map(Post_2000, func_div_ols),
-                'summary_trend_post00' = purrr::map(Post_2000, func_div_trend))
+                'summary_trend_post00' = purrr::map(Post_2000, func_div_trend),
+                'summary_trend_NW_post00' = purrr::map(Post_2000, func_div_trend_NW))
+
+### Post 2000 ###
+
+temp_ols_post00 <- sapply(nest_panel_pre_post_results$summary_ols_post00,
+                   func_extract_ols_summary)
+names(temp_ols_post00) <- name_country_full # Write out as .csv file
+
+temp_trend_post00_NW <- purrr::map(nest_panel_pre_post_results$summary_trend_NW_post00,
+                                func_extract_trend_summary)
+names(temp_trend_post00_NW) <- name_country_full
+trend_matrix_post00_NW <- t(as.data.frame(temp_trend_post00_NW)) # Write out as .csv file
