@@ -1,34 +1,39 @@
 library(tidyverse)
 
-### The previous dataset
-df_equity <- readr::read_csv('FTS_Data_Equity.csv',
-                            na = c("", "NA", ".", " ", "NaN", 'Inf', '-Inf'),
-                            skip = 3,
-                            col_names = T,
-                            col_types = cols(.default = col_double(),
-                                             Date = col_date(format = "%m/%d/%Y")))
+############################
+### The previous dataset ###
+############################
 
-df_equity <- df_equity %>%
- dplyr::mutate('Year' = lubridate::year(Date)) %>%
- dplyr::mutate('Canada_lag' = dplyr::lag(Canada)) %>% #include one-day lags
- dplyr::mutate('US_lag' = dplyr::lag(US)) %>% #include one-day lags
- dplyr::select(-Date_Number) %>%
- dplyr::select(Date, Year, everything())
-
-### The new dataset---updated till 2018 ###
-
-# df_equity <- readr::read_csv('CGR_equity_2019.csv',
-#                              na = c("", "NA", ".", " ", "NaN", 'Inf', '-Inf'),
-#                              col_names = T,
-#                              col_types = cols(.default = col_double(),
-#                                               Date = col_date(format = "%d/%m/%Y")))
+# df_equity <- readr::read_csv('FTS_Data_Equity.csv',
+#                             na = c("", "NA", ".", " ", "NaN", 'Inf', '-Inf'),
+#                             skip = 3,
+#                             col_names = T,
+#                             col_types = cols(.default = col_double(),
+#                                              Date = col_date(format = "%m/%d/%Y")))
 # 
 # df_equity <- df_equity %>%
-#   dplyr::mutate('Year' = lubridate::year(Date)) %>%
-#   dplyr::filter(Year < 2019) %>%
-#   dplyr::mutate('Canada_lag' = dplyr::lag(Canada)) %>% #include one-day lags
-#   dplyr::mutate('US_lag' = dplyr::lag(US)) %>% #include one-day lags
-#   dplyr::select(Date, Year, everything())
+#  dplyr::mutate('Year' = lubridate::year(Date)) %>%
+#  dplyr::mutate('Canada_lag' = dplyr::lag(Canada)) %>% #include one-day lags
+#  dplyr::mutate('US_lag' = dplyr::lag(US)) %>% #include one-day lags
+#  dplyr::select(-Date_Number) %>%
+#  dplyr::select(Date, Year, everything())
+
+###########################################
+### The new dataset---updated till 2018 ###
+###########################################
+
+df_equity <- readr::read_csv('CGR_equity_2019.csv',
+                             na = c("", "NA", ".", " ", "NaN", 'Inf', '-Inf'),
+                             col_names = T,
+                             col_types = cols(.default = col_double(),
+                                              Date = col_date(format = "%d/%m/%Y")))
+
+df_equity <- df_equity %>%
+  dplyr::mutate('Year' = lubridate::year(Date)) %>%
+  dplyr::filter(Year < 2019) %>%
+  dplyr::mutate('Canada_lag' = dplyr::lag(Canada)) %>% #include one-day lags
+  dplyr::mutate('US_lag' = dplyr::lag(US)) %>% #include one-day lags
+  dplyr::select(Date, Year, everything())
 
 ### Analysis begins here ###
 
@@ -158,14 +163,6 @@ func_NA_med_df <- function(df)
   return(df_2)
 }
 
-# nest_year_return_LHS_RHS <- nest_year_return_LHS_RHS %>%
-#   dplyr::mutate('RHS_country_clean' = purrr::map(RHS_country, func_NA_med_df), 
-#                 'Cov_matrix' = purrr::map(RHS_country_clean, cov),
-#                 'Eig_val' = purrr::map(Cov_matrix, function(df){return(eigen(df)$values)}),
-#                 'Eig_vec' = purrr::map(Cov_matrix, function(df){return(eigen(df)$vectors)}),
-#                 'Share' = purrr::map(Eig_val, function(vec){return(cumsum(vec)/sum(vec))}),
-#                 'Lag_eig_vec' = dplyr::lag(Eig_vec)) %>%
-#   dplyr::select(-RHS_country)
 
 nest_year_return_LHS_RHS <- nest_year_return_LHS_RHS %>%
   dplyr::mutate('RHS_country_clean' = purrr::map(RHS_country, func_NA_med_df), 
@@ -199,8 +196,6 @@ num_pc_equity <- ceiling(median(num_pc_90)) # 12 are enough
 
 # Compute PCs
 nest_year_return_LHS_RHS <- nest_year_return_LHS_RHS %>%
-#  dplyr::filter(!map_lgl(Lag_eig_vec, is.null)) %>%
-#  dplyr::filter(!map_lgl(Lag_eig_vec, is.na)) %>%
   dplyr::filter(Year >= year_cohort + 1) %>%
   dplyr::mutate('PC_out_sample' = purrr::map2(RHS_country_clean, Lag_eig_vec,
                                               function(df1, df2){return(df1%*%df2)}), #note df1%*%df2 [!]
