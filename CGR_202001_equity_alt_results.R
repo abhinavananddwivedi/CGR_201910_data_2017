@@ -54,22 +54,22 @@ func_div_trend <- function(df, formula = form_trend)
   return(summary(lm(data = data_matrix, formula = form_trend)))
 }
 
-func_trend_NW <- function(df, formula = form_trend)
-{
-  # This function computes the linear trend and reports
-  # heteroskedasticity and autocorrelation consistent errors
-  # according to Newey West
-  lhs <- dplyr::select(df, Div_Index)
-  rhs <- dplyr::select(df, Year)
-  
-  data.matrix <- data.frame(Div = lhs$Div_Index, Year = rhs$Year)
-  
-  lm_summ <- summary(lm(data = data.matrix, formula = form_trend))
-  vcov_err <- sandwich::NeweyWest(lm_summ)
-  lm_summ$coefficients <- unclass(lmtest::coeftest(lm_summ, vcov. = vcov_err))
-  
-  return(lm_summ)
-}
+# func_trend_NW <- function(df, formula = form_trend)
+# {
+#   # This function computes the linear trend and reports
+#   # heteroskedasticity and autocorrelation consistent errors
+#   # according to Newey West
+#   lhs <- dplyr::select(df, Div_Index)
+#   rhs <- dplyr::select(df, Year)
+#   
+#   data.matrix <- data.frame(Div = lhs$Div_Index, Year = rhs$Year)
+#   
+#   lm_summ <- summary(lm(data = data.matrix, formula = form_trend))
+#   vcov_err <- sandwich::NeweyWest(lm_summ)
+#   lm_summ$coefficients <- unclass(lmtest::coeftest(lm_summ, vcov. = vcov_err))
+#   
+#   return(lm_summ)
+# }
 
 func_extract_trend_summary <- function(lm_summary)
 {
@@ -95,8 +95,7 @@ func_extract_ols_summary <- function(lm_summary)
 
 nest_panel_common <- nest_panel_common %>%
   dplyr::mutate('summary_ols' = purrr::map(data, func_div_ols),
-                'summary_trend' = purrr::map(data, func_div_trend),
-                'summary_trend_NW' = purrr::map(data, func_trend_NW))
+                'summary_trend' = purrr::map(data, func_div_trend))
 
 ### Trends ###
 
@@ -105,9 +104,9 @@ temp_trend <- sapply(nest_panel_common$summary_trend,
 colnames(temp_trend) <- name_country_full
 trend_matrix_full <- t(temp_trend)
 
-temp_trend_NW <- sapply(nest_panel_common$summary_trend_NW, func_extract_trend_summary)
-colnames(temp_trend_NW) <- name_country_full
-trend_matrix_full_NW <- t(temp_trend_NW)
+# temp_trend_NW <- sapply(nest_panel_common$summary_trend_NW, func_extract_trend_summary)
+# colnames(temp_trend_NW) <- name_country_full
+# trend_matrix_full_NW <- t(temp_trend_NW)
 
 
 temp_ols <- sapply(nest_panel_common$summary_ols,

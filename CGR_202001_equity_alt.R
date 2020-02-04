@@ -158,14 +158,28 @@ func_NA_med_df <- function(df)
   return(df_2)
 }
 
+# nest_year_return_LHS_RHS <- nest_year_return_LHS_RHS %>%
+#   dplyr::mutate('RHS_country_clean' = purrr::map(RHS_country, func_NA_med_df), 
+#                 'Cov_matrix' = purrr::map(RHS_country_clean, cov),
+#                 'Eig_val' = purrr::map(Cov_matrix, function(df){return(eigen(df)$values)}),
+#                 'Eig_vec' = purrr::map(Cov_matrix, function(df){return(eigen(df)$vectors)}),
+#                 'Share' = purrr::map(Eig_val, function(vec){return(cumsum(vec)/sum(vec))}),
+#                 'Lag_eig_vec' = dplyr::lag(Eig_vec)) %>%
+#   dplyr::select(-RHS_country)
+
 nest_year_return_LHS_RHS <- nest_year_return_LHS_RHS %>%
   dplyr::mutate('RHS_country_clean' = purrr::map(RHS_country, func_NA_med_df), 
                 'Cov_matrix' = purrr::map(RHS_country_clean, cov),
                 'Eig_val' = purrr::map(Cov_matrix, function(df){return(eigen(df)$values)}),
                 'Eig_vec' = purrr::map(Cov_matrix, function(df){return(eigen(df)$vectors)}),
-                'Share' = purrr::map(Eig_val, function(vec){return(cumsum(vec)/sum(vec))}),
-                'Lag_eig_vec' = dplyr::lag(Eig_vec)) %>%
+                'Share' = purrr::map(Eig_val, function(vec){return(cumsum(vec)/sum(vec))})) %>%
   dplyr::select(-RHS_country)
+
+nest_lag_eig <- dplyr::lag(nest_year_return_LHS_RHS$Eig_vec) #due to some weird nested lag behavior
+
+# Adding lags of eigenvectors
+nest_year_return_LHS_RHS <- nest_year_return_LHS_RHS %>%
+  tibble::add_column('Lag_eig_vec' = nest_lag_eig)
 
 func_pc_90 <- function(vec)
 {
@@ -176,7 +190,7 @@ func_pc_90 <- function(vec)
 
 # How many PCs needed for explaining 90% of variation?
 num_pc_90 <- sapply(nest_year_return_LHS_RHS$Share, func_pc_90)
-num_pc_equity <- median(num_pc_90) # 12 are enough
+num_pc_equity <- ceiling(median(num_pc_90)) # 12 are enough
 # num_pc_equity <- max(num_pc_90) # At John's suggestion
 
 #############################################
@@ -185,11 +199,13 @@ num_pc_equity <- median(num_pc_90) # 12 are enough
 
 # Compute PCs
 nest_year_return_LHS_RHS <- nest_year_return_LHS_RHS %>%
-  dplyr::filter(!map_lgl(Lag_eig_vec, is.null)) %>%
+#  dplyr::filter(!map_lgl(Lag_eig_vec, is.null)) %>%
+#  dplyr::filter(!map_lgl(Lag_eig_vec, is.na)) %>%
+  dplyr::filter(Year >= year_cohort + 1) %>%
   dplyr::mutate('PC_out_sample' = purrr::map2(RHS_country_clean, Lag_eig_vec,
                                               function(df1, df2){return(df1%*%df2)}), #note df1%*%df2 [!]
                 'PC_out_sample_90' = purrr::map(PC_out_sample,
-                                                function(df){return(df[,1:num_pc_equity])}))
+                                                function(df){return(df[, 1:num_pc_equity])}))
 
 
 nest_year_regression <- nest_year_return_LHS_RHS %>%
@@ -332,12 +348,23 @@ func_eig_vec_list <- function(list)
   return(eig_vec_list)
 }
 
+# nest_year_pre_cohort_2 <- nest_year_pre_cohort_2 %>%
+#   dplyr::mutate('Cov_list_j' = purrr::map(RHS_country_j, 
+#                                           function(list){return(purrr::map(list, cov))})) %>%
+#   dplyr::mutate('Eig_val_list_j' = purrr::map(Cov_list_j, func_eig_val_list)) %>%
+#   dplyr::mutate('Eig_vec_list_j' = purrr::map(Cov_list_j, func_eig_vec_list)) %>%
+#   dplyr::mutate('Lag_eig_vec_list_j' = dplyr::lag(Eig_vec_list_j))
+
 nest_year_pre_cohort_2 <- nest_year_pre_cohort_2 %>%
   dplyr::mutate('Cov_list_j' = purrr::map(RHS_country_j, 
                                           function(list){return(purrr::map(list, cov))})) %>%
   dplyr::mutate('Eig_val_list_j' = purrr::map(Cov_list_j, func_eig_val_list)) %>%
-  dplyr::mutate('Eig_vec_list_j' = purrr::map(Cov_list_j, func_eig_vec_list)) %>%
-  dplyr::mutate('Lag_eig_vec_list_j' = dplyr::lag(Eig_vec_list_j))
+  dplyr::mutate('Eig_vec_list_j' = purrr::map(Cov_list_j, func_eig_vec_list)) 
+
+nest_lag_eig_list <- dplyr::lag(nest_year_pre_cohort_2$Eig_vec_list_j) #due to some weird nested lag behavior
+
+nest_year_pre_cohort_2 <- nest_year_pre_cohort_2 %>%
+  tibble::add_column('Lag_eig_vec_list_j' = nest_lag_eig_list)
 
 nest_year_pre_cohort_final <- nest_year_pre_cohort_2 %>%
   dplyr::select(Year, LHS_pre_cohort, RHS_country_j, 
@@ -360,13 +387,13 @@ func_list_multiply <- function(list1, list2)
 }
 
 nest_year_pre_cohort_final_2 <- nest_year_pre_cohort_final %>%
-  dplyr::filter(Year > 1986) %>% #Year 86 has incommensurate list lengths
+  dplyr::filter(Year > year_cohort + 1) %>% #Year 86 has incommensurate list lengths
   dplyr::mutate('PC_list_j' = purrr::map2(RHS_country_j, Lag_eig_vec_list_j,
                                           func_list_multiply)) %>%
   dplyr::select(Year, LHS_pre_cohort, PC_list_j)
 
 nest_year_pre_cohort_final_86 <- nest_year_pre_cohort_final %>%
-  dplyr::filter(Year == 1986) %>%
+  dplyr::filter(Year == year_cohort + 1) %>%
   dplyr::mutate('PC_list_j' = purrr::map2(RHS_country_j, Eig_vec_list_j, 
                                           func_list_multiply)) %>%
   dplyr::select(Year, LHS_pre_cohort, PC_list_j)
@@ -450,11 +477,17 @@ Div_ind_full_long <- dplyr::full_join(Div_ind_ordinary, Div_ind_pre_cohort,
 Div_ind_full_wide <- Div_ind_full_long %>%
   tidyr::spread(key = 'Country', value = 'Div_Index') 
 
+Div_world_mean <- apply(Div_ind_full_wide[, -1], 1, function(x){return(mean(x, na.rm = T))})
+
+# Div_ind_full_wide <- Div_ind_full_wide %>%
+#   dplyr::select(-Year) %>%
+#   dplyr::mutate('World_mean' = rowMeans(., na.rm = T)) %>%
+#   tibble::add_column('Year' = Div_ind_pre_cohort$Year) %>%
+#   dplyr::select(Year, World_mean, everything(.))
+
 Div_ind_full_wide <- Div_ind_full_wide %>%
-  dplyr::select(-Year) %>%
-  dplyr::mutate('World_mean' = rowMeans(., na.rm = T)) %>%
-  tibble::add_column('Year' = unique(Div_ind_full_long$Year)) %>%
-  dplyr::select(Year, World_mean, everything(.))
+  tibble::add_column('Div_world_mean' = Div_world_mean) %>%
+  dplyr::select(Year, Div_world_mean, everything())
 
 Div_ind_plot <- ggplot(data = Div_ind_full_wide, 
                        mapping = aes(Year, World_mean)) +
