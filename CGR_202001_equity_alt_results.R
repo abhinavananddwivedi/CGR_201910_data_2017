@@ -275,13 +275,14 @@ func_panel_est <- function(formula, panel_data, mdl = "within")
   # Include robust clustered errors
   plm_out$coefficients <- unclass(plm_fixed_robust) 
   
-  return(test_out)
+  return(plm_out)
 }
 
+# Convert to 'item-year' columns format for panel data in plm
+panel_common_2 <- panel_common %>%
+  dplyr::select(c(Country, Year, everything())) 
 
-# panel_est_full <- func_panel_est(formula = form_common,
-#                                  panel_common)
-
+panel_est_full <- func_panel_est(form_common, panel_common_2)
 
 
 
