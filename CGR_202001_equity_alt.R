@@ -343,12 +343,6 @@ func_eig_vec_list <- function(list)
   return(eig_vec_list)
 }
 
-# nest_year_pre_cohort_2 <- nest_year_pre_cohort_2 %>%
-#   dplyr::mutate('Cov_list_j' = purrr::map(RHS_country_j, 
-#                                           function(list){return(purrr::map(list, cov))})) %>%
-#   dplyr::mutate('Eig_val_list_j' = purrr::map(Cov_list_j, func_eig_val_list)) %>%
-#   dplyr::mutate('Eig_vec_list_j' = purrr::map(Cov_list_j, func_eig_vec_list)) %>%
-#   dplyr::mutate('Lag_eig_vec_list_j' = dplyr::lag(Eig_vec_list_j))
 
 nest_year_pre_cohort_2 <- nest_year_pre_cohort_2 %>%
   dplyr::mutate('Cov_list_j' = purrr::map(RHS_country_j, 
@@ -474,11 +468,6 @@ Div_ind_full_wide <- Div_ind_full_long %>%
 
 Div_world_mean <- apply(Div_ind_full_wide[, -1], 1, function(x){return(mean(x, na.rm = T))})
 
-# Div_ind_full_wide <- Div_ind_full_wide %>%
-#   dplyr::select(-Year) %>%
-#   dplyr::mutate('World_mean' = rowMeans(., na.rm = T)) %>%
-#   tibble::add_column('Year' = Div_ind_pre_cohort$Year) %>%
-#   dplyr::select(Year, World_mean, everything(.))
 
 Div_ind_full_wide <- Div_ind_full_wide %>%
   tibble::add_column('Div_world_mean' = Div_world_mean) %>%
@@ -489,6 +478,9 @@ Div_ind_plot <- ggplot(data = Div_ind_full_wide,
   geom_line() +
   geom_smooth(method = lm) +
   theme_bw()
+
+Div_ind_full_long_2 <- Div_ind_full_wide %>%
+  tidyr::gather(Div_world_mean:Zambia, key = 'Country', value = 'Div_Index')
 
 
 # readr::write_csv(Div_ind_ordinary, 'Diversification_regular_countries.csv')
