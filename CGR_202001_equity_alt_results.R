@@ -92,7 +92,7 @@ nest_panel_common <- nest_panel_common %>%
 
 temp_2 <- nest_panel_common %>%
   dplyr::select(-summary_trend_NW) %>%
-  dplyr::filter(Div_NA_fraction < 0.75) %>%
+  dplyr::filter(Div_NA_fraction < 0.75) %>% #else regressions crash
   dplyr::mutate('summary_OLS' = purrr::map(data, func_div_ols)) %>%
   dplyr::select(-data)
 
