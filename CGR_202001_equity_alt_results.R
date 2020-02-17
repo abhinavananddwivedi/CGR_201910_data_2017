@@ -21,7 +21,7 @@ RHS_common <- file_RHS_common %>%
 
 # Panel with common RHS factors
 panel_common <- RHS_common %>%
-  dplyr::full_join(., Div_ind_full_long_2, by = 'Year') %>%
+  dplyr::full_join(., Div_ind_full_long, by = 'Year') %>%
   dplyr::select(c(Year, Country, Div_Index, everything())) %>%
   dplyr::arrange(Country)
 
@@ -282,9 +282,46 @@ func_panel_est <- function(formula, panel_data, mdl = "within")
 panel_common_2 <- panel_common %>%
   dplyr::select(c(Country, Year, everything())) 
 
+### Computing panel estimates ###
+
+# Full country sample, full year sample
 panel_est_full <- func_panel_est(form_common, panel_common_2)
 
+# Full country sample, Pre-2000
+panel_est_pre00 <- func_panel_est(form_common, dplyr::filter(panel_common_2, 
+                                                             Year <= 2000))
 
+# Full country sample, Post-2000
+panel_est_post00 <- func_panel_est(form_common, dplyr::filter(panel_common_2, 
+                                                            Year > 2000))
+
+# Develped country sample, full year sample
+panel_est_dev <- func_panel_est(form_common, dplyr::filter(panel_common_2, 
+                                                            Country %in% name_country_developed))
+
+# Emerging country sample, full year sample 
+panel_est_emerg <- func_panel_est(form_common, dplyr::filter(panel_common_2, 
+                                                            Country %in% name_country_emerging))
+
+# Developed country sample, Pre 2000
+panel_est_dev_pre <- func_panel_est(form_common, dplyr::filter(panel_common_2, 
+                                                               Country %in% name_country_developed &
+                                                                 Year < 2000))
+
+# Emerging country sample, Pre 2000
+panel_est_emerg_pre <- func_panel_est(form_common, dplyr::filter(panel_common_2,
+                                                            Country %in% name_country_emerging &
+                                                              Year < 2000))
+
+# Developed country sample, Post 2000
+panel_est_dev_post <- func_panel_est(form_common, dplyr::filter(panel_common_2,
+                                                                Country %in% name_country_developed &
+                                                                  Year > 2000))
+
+# Emerging country sample, Post 2000
+panel_est_emerg_post <- func_panel_est(form_common, dplyr::filter(panel_common_2,
+                                                                  Country %in% name_country_emerging &
+                                                                    Year > 2000))
 
 
 
