@@ -1,0 +1,382 @@
+CGR Panel Regressions: Old Results Replicated
+
+EQUITY
+---------------------------------------------------------------------
+---------------------------------------------------------------------
+Unbalanced, Full: Table 7
+
+Oneway (individual) effect Within Model
+
+Call:
+plm(formula = LHS_eq ~ TED + VIX + SENT + FEDFUNDS + INTERNET + 
+    `1992 - ERM` + `2009-10 - EUROZONE`, data = panel_equity, 
+    model = "within", index = c("country_eq", "year_eq"))
+
+Unbalanced Panel: n=89, T=3-21, N=1475
+
+Residuals :
+    Min.  1st Qu.   Median  3rd Qu.     Max. 
+-39.8000  -8.8800   0.0404   8.3300  37.7000 
+
+Robust Errors
+
+t test of coefficients:
+
+                      Estimate Std. Error t value  Pr(>|t|)    
+TED                  -0.403815   2.147799 -0.1880 0.8508939    
+VIX                  -0.303809   0.088815 -3.4207 0.0006428 ***
+SENT                 -3.223854   0.459904 -7.0098 3.723e-12 ***
+FEDFUNDS             -0.164177   0.185443 -0.8853 0.3761360    
+INTERNET             -1.601683   0.173049 -9.2557 < 2.2e-16 ***
+`1992 - ERM`         -9.378250   1.839758 -5.0975 3.919e-07 ***
+`2009-10 - EUROZONE`  7.064310   2.703303  2.6132 0.0090671 ** 
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Total Sum of Squares:    480690
+Residual Sum of Squares: 237010
+R-Squared:      0.50694
+Adj. R-Squared: 0.47297
+F-statistic: 202.544 on 7 and 1379 DF, p-value: < 2.22e-16
+
+VERDICT: MATCH!
+---------------------------------------------------------------------
+Unbalanced, Emerging: Table 8
+
+Oneway (individual) effect Within Model
+
+Call:
+plm(formula = LHS_eq ~ TED + VIX + SENT + FEDFUNDS + INTERNET + 
+    `1992 - ERM` + `2009-10 - EUROZONE`, data = panel_equity, 
+    subset = country_eq %in% name_country_eq_emerging, model = "within", 
+    index = c("country_eq", "year_eq"))
+
+Unbalanced Panel: n=45, T=3-21, N=697
+
+Residuals :
+    Min.  1st Qu.   Median  3rd Qu.     Max. 
+-37.5000  -5.0400   0.0455   5.6700  24.5000
+
+Robust Errors
+
+t test of coefficients:
+
+                      Estimate Std. Error t value  Pr(>|t|)    
+TED                  -7.500061   1.429553 -5.2464 2.106e-07 ***
+VIX                   0.069128   0.050995  1.3556  0.175702    
+SENT                 -1.449131   0.578555 -2.5047  0.012500 *  
+FEDFUNDS             -0.011716   0.267915 -0.0437  0.965133    
+INTERNET             -0.670934   0.153409 -4.3735 1.425e-05 ***
+`1992 - ERM`         -4.724008   1.934110 -2.4425  0.014854 *  
+`2009-10 - EUROZONE` -4.892419   1.502355 -3.2565  0.001187 ** 
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Total Sum of Squares:    92284
+Residual Sum of Squares: 57490
+R-Squared:      0.37703
+Adj. R-Squared: 0.32777
+F-statistic: 55.7656 on 7 and 645 DF, p-value: < 2.22e-16
+
+VERDICT: MATCH!
+----------------------------------------------------------------------
+Unbalanced, Developed, Table 8
+
+Oneway (individual) effect Within Model
+
+Call:
+plm(formula = LHS_eq ~ TED + VIX + SENT + FEDFUNDS + INTERNET + 
+    `1992 - ERM` + `2009-10 - EUROZONE`, data = panel_equity, 
+    subset = country_eq %in% name_country_eq_dev, model = "within", 
+    index = c("country_eq", "year_eq"))
+
+Unbalanced Panel: n=44, T=3-21, N=778
+
+Residuals :
+    Min.  1st Qu.   Median  3rd Qu.     Max. 
+-44.4000  -8.4400  -0.0331   8.6000  39.4000 
+
+Robust Errors
+t test of coefficients:
+
+                      Estimate Std. Error  t value  Pr(>|t|)    
+TED                    4.66094    3.30600   1.4098    0.1590    
+VIX                   -0.56587    0.13246  -4.2720 2.195e-05 ***
+SENT                  -4.16877    0.66043  -6.3122 4.784e-10 ***
+FEDFUNDS              -0.28358    0.21560  -1.3153    0.1888    
+INTERNET              -2.35735    0.21257 -11.0896 < 2.2e-16 ***
+`1992 - ERM`         -13.41290    2.72249  -4.9267 1.036e-06 ***
+`2009-10 - EUROZONE`  16.04629    4.00078   4.0108 6.677e-05 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Total Sum of Squares:    388400
+Residual Sum of Squares: 129990
+R-Squared:      0.66533
+Adj. R-Squared: 0.64231
+F-statistic: 206.466 on 7 and 727 DF, p-value: < 2.22e-16
+
+VERDICT: MATCH!
+--------------------------------------------------------------------
+Unbalanced, Pre-2000, Table 9
+
+Oneway (individual) effect Within Model
+
+Call:
+plm(formula = LHS_eq ~ TED + VIX + SENT + FEDFUNDS + INTERNET + 
+    `1992 - ERM` + `2009-10 - EUROZONE`, data = panel_equity, 
+    subset = year_eq %in% year_pre_00, model = "within", index = c("country_eq", 
+        "year_eq"))
+
+Unbalanced Panel: n=72, T=1-10, N=569
+
+Residuals :
+   Min. 1st Qu.  Median 3rd Qu.    Max. 
+ -41.10   -4.44    0.82    5.95   18.00 
+
+Robust Errors
+
+t test of coefficients:
+
+              Estimate Std. Error t value  Pr(>|t|)    
+TED          -64.78040    8.59086 -7.5406 2.279e-13 ***
+VIX           -0.49166    0.18183 -2.7040  0.007089 ** 
+SENT         -13.17163    2.22583 -5.9176 6.134e-09 ***
+FEDFUNDS       5.95157    0.71177  8.3616 6.432e-16 ***
+INTERNET       3.31335    0.70868  4.6754 3.797e-06 ***
+`1992 - ERM`  -7.94986    1.65142 -4.8139 1.973e-06 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Total Sum of Squares:    64088
+Residual Sum of Squares: 42277
+R-Squared:      0.34033
+Adj. R-Squared: 0.23687
+F-statistic: 42.2177 on 6 and 491 DF, p-value: < 2.22e-16
+
+VERDICT: MATCH!
+------------------------------------------------------------------------
+Unbalanced, Post-2000, Table 9
+
+Oneway (individual) effect Within Model
+
+Call:
+plm(formula = LHS_eq ~ TED + VIX + SENT + FEDFUNDS + INTERNET + 
+    `1992 - ERM` + `2009-10 - EUROZONE`, data = panel_equity, 
+    subset = year_eq %in% year_post_00, model = "within", index = c("country_eq", 
+        "year_eq"))
+
+Unbalanced Panel: n=89, T=3-11, N=906
+
+Residuals :
+   Min. 1st Qu.  Median 3rd Qu.    Max. 
+-32.300  -7.280  -0.715   6.490  48.300 
+
+Robust Errors
+
+t test of coefficients:
+
+                     Estimate Std. Error t value  Pr(>|t|)    
+TED                  10.34080    2.86980  3.6033 0.0003333 ***
+VIX                  -0.56505    0.12852 -4.3966 1.246e-05 ***
+SENT                 -6.58918    1.15554 -5.7022 1.656e-08 ***
+FEDFUNDS             -0.31282    0.33669 -0.9291 0.3531035    
+INTERNET             -2.53654    0.28579 -8.8755 < 2.2e-16 ***
+`2009-10 - EUROZONE` 21.23451    3.66919  5.7872 1.022e-08 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Total Sum of Squares:    163410
+Residual Sum of Squares: 87463
+R-Squared:      0.46477
+Adj. R-Squared: 0.40274
+F-statistic: 117.374 on 6 and 811 DF, p-value: < 2.22e-16
+
+VERDICT: MATCH!
+--------------------------------------------------------------------------
+Balanced, Full: Table 7
+
+Oneway (individual) effect Within Model
+
+Call:
+plm(formula = LHS_eq ~ TED + VIX + SENT + FEDFUNDS + INTERNET + 
+    `2009-10 - EUROZONE`, data = panel_bal_eq, model = "within", 
+    index = c("country_eq", "year_eq"))
+
+Balanced Panel: n=60, T=15, N=900
+
+Residuals :
+   Min. 1st Qu.  Median 3rd Qu.    Max. 
+ -34.60   -8.19   -1.63    7.89   47.80 
+
+Robust Errors
+
+t test of coefficients:
+
+                      Estimate Std. Error t value  Pr(>|t|)    
+TED                   0.084366   2.419351  0.0349  0.972191    
+VIX                  -0.339658   0.108381 -3.1339  0.001785 ** 
+SENT                  1.967497   0.640469  3.0720  0.002196 ** 
+FEDFUNDS             -2.119009   0.419243 -5.0544 5.309e-07 ***
+INTERNET             -1.662568   0.190768 -8.7151 < 2.2e-16 ***
+`2009-10 - EUROZONE`  2.029345   2.674130  0.7589  0.448139    
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Total Sum of Squares:    258960
+Residual Sum of Squares: 134360
+R-Squared:      0.48114
+Adj. R-Squared: 0.4407
+F-statistic: 128.895 on 6 and 834 DF, p-value: < 2.22e-16
+
+VERDICT: MATCH!
+--------------------------------------------------------------------------------
+Balanced, Emerging, Table 8
+
+Oneway (individual) effect Within Model
+
+Call:
+plm(formula = LHS_eq ~ TED + VIX + SENT + FEDFUNDS + INTERNET + 
+    `2009-10 - EUROZONE`, data = panel_bal_eq, subset = country_eq %in% 
+    name_country_eq_emerging, model = "within", index = c("country_eq", 
+    "year_eq"))
+
+Balanced Panel: n=26, T=15, N=390
+
+Residuals :
+   Min. 1st Qu.  Median 3rd Qu.    Max. 
+-30.700  -5.600  -0.494   6.150  31.000 
+
+Robust Errors
+
+t test of coefficients:
+
+                      Estimate Std. Error t value  Pr(>|t|)    
+TED                  -7.564555   1.423577 -5.3138 1.892e-07 ***
+VIX                   0.011410   0.074887  0.1524   0.87899    
+SENT                  0.781953   0.713590  1.0958   0.27390    
+FEDFUNDS             -1.280091   0.645480 -1.9832   0.04811 *  
+INTERNET             -0.806274   0.201041 -4.0105 7.378e-05 ***
+`2009-10 - EUROZONE` -7.192461   1.586683 -4.5330 7.939e-06 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Total Sum of Squares:    58901
+Residual Sum of Squares: 35141
+R-Squared:      0.40339
+Adj. R-Squared: 0.35173
+F-statistic: 40.3436 on 6 and 358 DF, p-value: < 2.22e-16
+
+VERDICT: MATCH!
+---------------------------------------------------------------------------------
+Balanced, Developed, Table 8
+
+Oneway (individual) effect Within Model
+
+Call:
+plm(formula = LHS_eq ~ TED + VIX + SENT + FEDFUNDS + INTERNET + 
+    `2009-10 - EUROZONE`, data = panel_bal_eq, subset = country_eq %in% 
+    name_country_eq_dev, model = "within", index = c("country_eq", 
+    "year_eq"))
+
+Balanced Panel: n=34, T=15, N=510
+
+Residuals :
+   Min. 1st Qu.  Median 3rd Qu.    Max. 
+ -40.10   -8.56   -0.99    7.58   41.00 
+
+Robust Errors
+
+t test of coefficients:
+
+                     Estimate Std. Error t value  Pr(>|t|)    
+TED                   5.93354    3.83678  1.5465 0.1226598    
+VIX                  -0.60812    0.16855 -3.6080 0.0003417 ***
+SENT                  2.87409    0.96119  2.9901 0.0029348 ** 
+FEDFUNDS             -2.76053    0.52516 -5.2566 2.231e-07 ***
+INTERNET             -2.31738    0.24616 -9.4141 < 2.2e-16 ***
+`2009-10 - EUROZONE`  9.08131    4.17395  2.1757 0.0300745 *  
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Total Sum of Squares:    200050
+Residual Sum of Squares: 82918
+R-Squared:      0.58552
+Adj. R-Squared: 0.55113
+F-statistic: 110.659 on 6 and 470 DF, p-value: < 2.22e-16
+
+VERDICT: MATCH!
+-------------------------------------------------------------------------------
+Balanced, 1996-2003, Table 9
+
+Oneway (individual) effect Within Model
+
+Call:
+plm(formula = LHS_eq ~ TED + VIX + SENT + FEDFUNDS + INTERNET + 
+    `2009-10 - EUROZONE`, data = panel_bal_eq, subset = year_eq %in% 
+    year_bal_1, model = "within", index = c("country_eq", "year_eq"))
+
+Balanced Panel: n=60, T=8, N=480
+
+Residuals :
+   Min. 1st Qu.  Median 3rd Qu.    Max. 
+-36.200  -4.990   0.917   6.330  38.700 
+
+Robust Errors
+
+t test of coefficients:
+
+         Estimate Std. Error t value  Pr(>|t|)    
+TED      16.75881    4.63820  3.6132 0.0003395 ***
+VIX      -1.13991    0.17232 -6.6151 1.147e-10 ***
+SENT      7.91874    1.78601  4.4338 1.187e-05 ***
+FEDFUNDS -7.95533    1.61307 -4.9318 1.181e-06 ***
+INTERNET -2.29750    0.40838 -5.6259 3.399e-08 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Total Sum of Squares:    66424
+Residual Sum of Squares: 54438
+R-Squared:      0.18046
+Adj. R-Squared: 0.054069
+F-statistic: 18.2759 on 5 and 415 DF, p-value: < 2.22e-16
+
+VERDICT: MATCH!
+------------------------------------------------------------------------------
+Balanced: 2004:2010, Table 9
+
+Oneway (individual) effect Within Model
+
+Call:
+plm(formula = LHS_eq ~ TED + VIX + SENT + FEDFUNDS + INTERNET + 
+    `2009-10 - EUROZONE`, data = panel_bal_eq, subset = year_eq %in% 
+    year_bal_2, model = "within", index = c("country_eq", "year_eq"))
+
+Balanced Panel: n=60, T=7, N=420
+
+Residuals :
+   Min. 1st Qu.  Median 3rd Qu.    Max. 
+-27.900  -5.430  -0.221   5.160  30.200 
+
+Robust Errors
+
+t test of coefficients:
+
+                      Estimate Std. Error t value  Pr(>|t|)    
+TED                  -17.82746   14.56958 -1.2236 0.2219139    
+VIX                    0.90416    0.76292  1.1851 0.2367622    
+SENT                 -75.72341   21.91996 -3.4545 0.0006181 ***
+FEDFUNDS               4.96260    2.12898  2.3310 0.0203156 *  
+INTERNET              -3.18758    0.47543 -6.7046 7.992e-11 ***
+`2009-10 - EUROZONE`  17.48892    9.07058  1.9281 0.0546433 .  
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Total Sum of Squares:    52004
+Residual Sum of Squares: 28986
+R-Squared:      0.44263
+Adj. R-Squared: 0.34029
+F-statistic: 46.854 on 6 and 354 DF, p-value: < 2.22e-16
+
+VERDICT: NOT MATCH!!! ORIGINAL RESULTS IN TABLE 9 WRONG!!!
+-----------------------------------------------------------------------------------

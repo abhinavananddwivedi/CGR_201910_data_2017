@@ -306,12 +306,12 @@ panel_est_emerg <- func_panel_est(form_common, dplyr::filter(panel_common_2,
 # Developed country sample, Pre 2000
 panel_est_dev_pre <- func_panel_est(form_common, dplyr::filter(panel_common_2, 
                                                                Country %in% name_country_developed &
-                                                                 Year < 2000))
+                                                                 Year <= 2000))
 
 # Emerging country sample, Pre 2000
 panel_est_emerg_pre <- func_panel_est(form_common, dplyr::filter(panel_common_2,
                                                             Country %in% name_country_emerging &
-                                                              Year < 2000))
+                                                              Year <= 2000))
 
 # Developed country sample, Post 2000
 panel_est_dev_post <- func_panel_est(form_common, dplyr::filter(panel_common_2,
@@ -323,7 +323,10 @@ panel_est_emerg_post <- func_panel_est(form_common, dplyr::filter(panel_common_2
                                                                   Country %in% name_country_emerging &
                                                                     Year > 2000))
 
+### Panel estimation with common and idiosyncratic factors ###
 
+# form_common_idio <- Div ~ TED + VIX + SENT + FEDFUNDS + INTERNET + ERM + EZ + Agg_Fin_Risk + Agg_Econ_Risk +
+#   Agg_Pol_Risk + Equity_Liq 
 
 
 
