@@ -59,12 +59,13 @@ func_div_trend_NW <- function(df, formula = form_trend)
   lhs <- dplyr::select(df, Div_Index)
   rhs <- dplyr::select(df, Year)
 
-  data.matrix <- data.frame(Div = lhs$Div_Index, 
+  data_matrix <- data.frame(Div = lhs$Div_Index, 
                             Year = rhs$Year)
 
-  lm_div <- lm(data = data.matrix, formula)
+  lm_div <- lm(data = data_matrix, formula)
   lm_summ <- summary(lm_div)
-  vcov_err <- sandwich::NeweyWest(lm_div, lag = 1, 
+  vcov_err <- sandwich::NeweyWest(lm_div, 
+                                  lag = 1, 
                                   prewhite = F, 
                                   adjust = T)
   lm_summ$coefficients <- unclass(lmtest::coeftest(lm_div, 
