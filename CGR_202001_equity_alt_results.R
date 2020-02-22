@@ -218,34 +218,32 @@ nest_panel_common_emerging <- nest_panel_common_emerging %>%
   dplyr::full_join(., temp_pre_emerg, by = c('Country', 'Div_NA_frac_pre'))
 
 
-func_extract_trend_summary <- function(trend_summary)
-{
-  # This function accepts a summary of trend regression
-  # and returns the relevant row and column results from the 
-  # trend regression
-  lm_coeff <- trend_summary$coefficients
-  name_select <- c('Estimate', 't value', 'Pr(>|t|)')
-  
-  # Ignore the first row for intercept
-  lm_trend <- lm_coeff[2, dplyr::intersect(name_select, colnames(lm_coeff))]
-  
-  return(lm_trend)
-}
-
-func_extract_ols_summary <- function(lm_summary)
-{
-  # This function accepts a summary of linear regression
-  # and returns the relevant column results from the 
-  # regression coefficient matrix
-  lm_coeff <- lm_summary$coefficients
-  name_select <- c('Estimate', 't value', 'Pr(>|t|)')
-  
-  lm_ols <- lm_coeff[, dplyr::intersect(name_select, colnames(lm_coeff))]
-  
-  return(lm_ols)
-}
-
-
+# func_extract_trend_summary <- function(trend_summary)
+# {
+#   # This function accepts a summary of trend regression
+#   # and returns the relevant row and column results from the 
+#   # trend regression
+#   lm_coeff <- trend_summary$coefficients
+#   name_select <- c('Estimate', 't value', 'Pr(>|t|)')
+#   
+#   # Ignore the first row for intercept
+#   lm_trend <- lm_coeff[2, dplyr::intersect(name_select, colnames(lm_coeff))]
+#   
+#   return(lm_trend)
+# }
+# 
+# func_extract_ols_summary <- function(lm_summary)
+# {
+#   # This function accepts a summary of linear regression
+#   # and returns the relevant column results from the 
+#   # regression coefficient matrix
+#   lm_coeff <- lm_summary$coefficients
+#   name_select <- c('Estimate', 't value', 'Pr(>|t|)')
+#   
+#   lm_ols <- lm_coeff[, dplyr::intersect(name_select, colnames(lm_coeff))]
+#   
+#   return(lm_ols)
+# }
 
 ####################################
 ### Panel estimation begins here ###
@@ -262,8 +260,10 @@ func_panel_est <- function(formula, panel_data, mdl = "within")
     dplyr::rename('Div' = Div_Index)
   
   # Panel estimation with fixed effects
-  plm_fixed <- plm::plm(formula, data = panel_data, 
-                        model = mdl, type = "HC0", 
+  plm_fixed <- plm::plm(formula, 
+                        data = panel_data, 
+                        model = mdl, 
+                        type = "HC0", 
                         effect = "individual")
   
   # Robust, clustered standard errors
@@ -290,11 +290,11 @@ panel_est_full <- func_panel_est(form_common, panel_common_2)
 
 # Full country sample, Pre-2000
 panel_est_pre00 <- func_panel_est(form_common, dplyr::filter(panel_common_2, 
-                                                             Year <= 2000))
+                                                             Year < 2000))
 
 # Full country sample, Post-2000
 panel_est_post00 <- func_panel_est(form_common, dplyr::filter(panel_common_2, 
-                                                            Year > 2000))
+                                                            Year >= 2000))
 
 # Develped country sample, full year sample
 panel_est_dev <- func_panel_est(form_common, dplyr::filter(panel_common_2, 
@@ -307,27 +307,120 @@ panel_est_emerg <- func_panel_est(form_common, dplyr::filter(panel_common_2,
 # Developed country sample, Pre 2000
 panel_est_dev_pre <- func_panel_est(form_common, dplyr::filter(panel_common_2, 
                                                                Country %in% name_country_developed &
-                                                                 Year <= 2000))
+                                                                 Year < 2000))
 
 # Emerging country sample, Pre 2000
 panel_est_emerg_pre <- func_panel_est(form_common, dplyr::filter(panel_common_2,
                                                             Country %in% name_country_emerging &
-                                                              Year <= 2000))
+                                                              Year < 2000))
 
 # Developed country sample, Post 2000
 panel_est_dev_post <- func_panel_est(form_common, dplyr::filter(panel_common_2,
                                                                 Country %in% name_country_developed &
-                                                                  Year > 2000))
+                                                                  Year >= 2000))
 
 # Emerging country sample, Post 2000
 panel_est_emerg_post <- func_panel_est(form_common, dplyr::filter(panel_common_2,
                                                                   Country %in% name_country_emerging &
-                                                                    Year > 2000))
+                                                                    Year >= 2000))
 
+##############################################################
 ### Panel estimation with common and idiosyncratic factors ###
+##############################################################
 
-# form_common_idio <- Div ~ TED + VIX + SENT + FEDFUNDS + INTERNET + ERM + EZ + Agg_Fin_Risk + Agg_Econ_Risk +
-#   Agg_Pol_Risk + Equity_Liq 
+# Aggregate economic risk
+panel_agg_econ <- readr::read_csv('Add_Panel_Econ_Risk.csv') %>%
+  dplyr::rename('Agg_econ_risk' = `Aggregate Economic Risk`) %>%
+  dplyr::select(Country, Year, Agg_econ_risk)
+
+# Aggregate financial risk
+panel_agg_fin <- readr::read_csv('Add_Panel_Fin_Risk.csv') %>%
+  dplyr::rename('Agg_fin_risk' = `Aggregate Financial Risk`) %>%
+  dplyr::select(Country, Year, Agg_fin_risk)
+
+# Liquidity risk
+panel_liq <- readr::read_csv('Add_Panel_Liq.csv') %>%
+  dplyr::rename('Country' = country, 'Year' = year)
+
+## Political risk file read
+panel_political <- readr::read_csv('Political_Risk_201704.csv')
+
+func_sum_row <- function(data_frame)
+{
+  temp_data <- data_frame %>%
+    dplyr::select(-c(Country, Year)) 
+  
+  temp_sum <- apply(temp_data, 1, function(vec){return(sum(vec, na.rm = T))})
+  
+  temp_temp <- data_frame %>%
+    tibble::add_column(., 'Agg_pol_risk' = temp_sum) %>%
+    dplyr::select(Country, Year, Agg_pol_risk)
+  
+  return(temp_temp)
+}
+
+# Aggregating individual political risk variables
+panel_agg_pol_risk <- func_sum_row(panel_political)
+
+# Developmental indicators
+panel_dev_indicators <- readr::read_csv('Development_Indicators_201704.csv') %>%
+  dplyr::rename('Country' = `Country Name`,
+                'Country_internet' = `Internet users (per 100 people)`)
+
+panel_country_internet <- panel_dev_indicators %>%
+  dplyr::select(Country, Year, Country_internet)
+
+### COMPUTE ALSO THE FIRST DEVELOPMENTAL PRINCIPAL COMPONENT ###
+
+# Joining the panels of idiosyncratic variables #
+panel_idio <- panel_agg_econ %>%
+  dplyr::full_join(., panel_agg_fin, by = c('Country', 'Year')) %>%
+  dplyr::full_join(., panel_agg_pol_risk, by = c('Country', 'Year')) %>%
+  dplyr::full_join(., panel_liq, by = c('Country', 'Year')) %>%
+  dplyr::full_join(., panel_country_internet, by = c('Country', 'Year'))
+
+# Joining the common and idiosyncratic panels together
+panel_common_idio <- panel_common_2 %>%
+  dplyr::left_join(., panel_idio, by = c('Country', 'Year'))
+
+### TABLE 8 ###
+
+# Replacing global internet with country internet 
+form_common_country_internet <- Div ~ TED + VIX + SENT + FEDFUNDS + ERM + EZ + Country_internet
+
+panel_est_common_country_internet <- func_panel_est(formula = form_common_country_internet,
+                                                    panel_data = panel_common_idio)
 
 
+### TABLE 9 ###
 
+# With risks only: economic, political, financial, liquidity 
+form_common_idio <- Div ~ TED + VIX + SENT + FEDFUNDS + 
+  ERM + EZ + Agg_econ_risk + Agg_fin_risk + Agg_pol_risk + Liq_risk
+
+panel_est_common_idio <- func_panel_est(formula = form_common_idio, panel_data = panel_common_idio)
+
+# With risks: economic, political, financial, liquidity + Country internet
+form_common_idio_country_internet <- Div ~ TED + VIX + SENT + FEDFUNDS + 
+  ERM + EZ + Agg_econ_risk + Agg_fin_risk + Agg_pol_risk + Liq_risk + Country_internet
+
+panel_est_common_idio_country_internet <- func_panel_est(formula = form_common_idio_country_internet, 
+                                                         panel_data = panel_common_idio)
+
+
+### TABLE 10 ###
+
+# Developed countries only
+panel_est_common_idio_country_internet_dev <- func_panel_est(formula = form_common_idio_country_internet, 
+                                                             panel_data = dplyr::filter(panel_common_idio,
+                                                                                        Country %in% name_country_developed))
+
+# Pre-2000
+panel_est_common_idio_country_internet_pre <- func_panel_est(formula = form_common_idio_country_internet, 
+                                                             panel_data = dplyr::filter(panel_common_idio,
+                                                                                        Year < 2000))
+
+# Post-2000
+panel_est_common_idio_country_internet_post <- func_panel_est(formula = form_common_idio_country_internet, 
+                                                             panel_data = dplyr::filter(panel_common_idio,
+                                                                                        Year >= 2000))
