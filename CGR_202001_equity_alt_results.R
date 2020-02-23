@@ -148,7 +148,19 @@ name_country_developed <-  c('Argentina', 'Australia', 'Austria',
                              'Slovakia', 'Slovenia', 'Spain', 'Sweden', 
                              'Switzerland', 'UAE', 'UK', 'US')
 
+name_country_frontier <- c('Argentina', 'Bahrain', 'Bangladesh', 'Botswana', 
+                           'Bulgaria', "Cote d'Ivoire", 'Croatia', 'Cyprus', 
+                           'Ecuador', 'Estonia', 'Ghana', 'Jamaica', 'Jordan', 
+                           'Kazakhstan', 'Kenya', 'Kuwait', 'Latvia', 'Lebanon', 
+                           'Lithuania', 'Mauritius', 'Namibia', 'Nigeria', 
+                           'Oman', 'Pakistan', 'Panama', 'Qatar', 'Romania', 
+                           'Slovakia', 'Slovenia', 'Sri Lanka', 'Trinidad', 
+                           'Tunisia', 'Ukraine', 'UAE',   'Vietnam', 'Zambia')
+
 name_country_emerging <- dplyr::setdiff(name_country_full, name_country_developed)
+
+# name_country_emerging <- dplyr::setdiff(name_country_full, 
+#                                         dplyr::union(name_country_developed, name_country_frontier))
 
 # Developed countries: OLS and trends
 nest_panel_common_dev <- nest_panel_common %>%
@@ -347,9 +359,14 @@ panel_political <- readr::read_csv('Political_Risk_201704.csv')
 
 func_sum_row <- function(data_frame)
 {
+  # This function accepts a panel data frame and
+  # returns its row sums after ignoring the first
+  # two columns
+   
   temp_data <- data_frame %>%
     dplyr::select(-c(Country, Year)) 
   
+  # Compute row sums
   temp_sum <- apply(temp_data, 1, function(vec){return(sum(vec, na.rm = T))})
   
   temp_temp <- data_frame %>%
