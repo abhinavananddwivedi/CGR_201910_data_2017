@@ -74,9 +74,9 @@ func_div_trend_NW <- function(df, formula = form_trend)
   return(lm_summ)
 }
 
-################################
-### Computing OLS and Trends ###
-################################
+###############################################################
+### Computing linear trend for each country (TABLE 2) #########
+###############################################################
 
 func_div_frac_NA <- function(df)
 {
@@ -86,23 +86,21 @@ func_div_frac_NA <- function(df)
   return(sum(is.na(df$Div_Index)/nrow(df)))
 }
 
-# Compute trend and OLS for full sample
+# Compute trend for full sample
 nest_panel_common <- nest_panel_common %>%
   dplyr::mutate('Div_NA_fraction' = purrr::map_dbl(data, func_div_frac_NA)) %>%
   dplyr::mutate('summary_trend_NW' = purrr::map(data, func_div_trend_NW))
 
-temp_2 <- nest_panel_common %>%
-  dplyr::select(-summary_trend_NW) %>%
-  dplyr::filter(Div_NA_fraction < 0.75) %>% #else regressions crash
-  dplyr::mutate('summary_OLS' = purrr::map(data, func_div_ols)) %>%
-  dplyr::select(-data)
+# temp_2 <- nest_panel_common %>%
+#   dplyr::select(-summary_trend_NW) %>%
+#   dplyr::filter(Div_NA_fraction < 0.75) %>% #else regressions crash
+#   dplyr::mutate('summary_OLS' = purrr::map(data, func_div_ols)) %>%
+#   dplyr::select(-data)
+# 
+# nest_panel_common <- nest_panel_common %>%
+#   dplyr::full_join(., temp_2, by = c('Country', 'Div_NA_fraction'))
 
-nest_panel_common <- nest_panel_common %>%
-  dplyr::full_join(., temp_2, by = c('Country', 'Div_NA_fraction'))
-
-#######################################
 ### By year: pre-2000 and post 2000 ###
-#######################################
 
 func_pre00 <- function(df)
 {
@@ -124,17 +122,63 @@ nest_panel_pre_post <- nest_panel_common %>%
 
 temp_pre <- nest_panel_pre_post %>%
   dplyr::select(c(Country, Pre_2000, Div_NA_frac_pre)) %>%
-  dplyr::filter(Div_NA_frac_pre < 0.9) %>% # else regressions crash
+  dplyr::filter(Div_NA_frac_pre != 1) %>% # else regressions crash
   dplyr::mutate('Pre00_trend' = purrr::map(Pre_2000, func_div_trend_NW)) %>%
   dplyr::select(-Pre_2000)
 
 nest_panel_pre_post <- nest_panel_pre_post %>%
   dplyr::full_join(., temp_pre, by = c('Country', 'Div_NA_frac_pre'))
-  
 
-#########################################
-### By countries: developed, emerging ###
-#########################################
+########################################################################
+################ FOR PRINTING OUTPUTS (TABLE 2) ########################
+########################################################################
+
+func_trend_print <- function(lm_trend)
+{
+  lm_coef <- lm_trend$coefficients
+  lm_coef_year <- lm_coef['Year', ]
+  
+  return(lm_coef_year)
+}
+
+### Full country set, full years ###
+panel_trend_print <- nest_panel_common %>%
+  select(Country, summary_trend_NW) %>%
+  mutate('Coef_year' = purrr::map(summary_trend_NW, func_trend_print))
+
+print_trend <- panel_trend_print$Coef_year
+names(print_trend) <- name_country_full
+
+print_trend_2 <- dplyr::bind_rows(print_trend) %>% t(.)
+
+### Full country set, pre 2000 ###
+panel_trend_print_pre <- nest_panel_pre_post %>%
+  filter(Div_NA_frac_pre < 0.9) %>% # no regression results otherwise
+  select(Country, Pre00_trend) %>%
+  mutate('Coef_year' = purrr::map(Pre00_trend, func_trend_print))
+
+print_trend_pre <- panel_trend_print_pre$Coef_year
+names(print_trend_pre) <- panel_trend_print_pre$Country
+
+print_trend_pre_2 <- dplyr::bind_rows(print_trend_pre) %>% t(.)
+
+### Full country set, post 2000 ###
+panel_trend_print_post <- nest_panel_pre_post %>%
+  select(Country, Post00_trend) %>%
+  mutate('Coef_year' = purrr::map(Post00_trend, func_trend_print))
+
+print_trend_post <- panel_trend_print_post$Coef_year
+names(print_trend_post) <- name_country_full
+
+print_trend_post_2 <- dplyr::bind_rows(print_trend_post) %>% t(.)
+
+##############################################################
+
+##############################################################
+## Trend for the subsample of developed countries (TABLE 4) ##
+##############################################################
+
+### By countries: developed and non-developed (emerging) ###
 
 name_country_developed <-  c('Argentina', 'Australia', 'Austria', 
                              'Bahrain', 'Belgium', 'Canada', 'Chile', 
@@ -148,86 +192,174 @@ name_country_developed <-  c('Argentina', 'Australia', 'Austria',
                              'Slovakia', 'Slovenia', 'Spain', 'Sweden', 
                              'Switzerland', 'UAE', 'UK', 'US')
 
-name_country_frontier <- c('Argentina', 'Bahrain', 'Bangladesh', 'Botswana', 
-                           'Bulgaria', "Cote d'Ivoire", 'Croatia', 'Cyprus', 
-                           'Ecuador', 'Estonia', 'Ghana', 'Jamaica', 'Jordan', 
-                           'Kazakhstan', 'Kenya', 'Kuwait', 'Latvia', 'Lebanon', 
-                           'Lithuania', 'Mauritius', 'Namibia', 'Nigeria', 
-                           'Oman', 'Pakistan', 'Panama', 'Qatar', 'Romania', 
-                           'Slovakia', 'Slovenia', 'Sri Lanka', 'Trinidad', 
-                           'Tunisia', 'Ukraine', 'UAE',   'Vietnam', 'Zambia')
+panel_common_dev <- panel_common %>% dplyr::filter(., Country %in% name_country_developed)
+trend_dev <- func_div_trend_NW(panel_common_dev, formula = form_trend)
+
+panel_common_dev_pre <- panel_common_dev %>% dplyr::filter(., Year < 2000)
+trend_dev_pre <- func_div_trend_NW(panel_common_dev_pre, formula = form_trend)
+
+panel_common_dev_post <- panel_common_dev %>% dplyr::filter(., Year >= 2000)
+trend_dev_post <- func_div_trend_NW(panel_common_dev_post, formula = form_trend)
+
+#############################################################################
+## Trend for the subsample of non-developed (emerging) countries (TABLE 4) ##
+#############################################################################
 
 name_country_emerging <- dplyr::setdiff(name_country_full, name_country_developed)
 
-# name_country_emerging <- dplyr::setdiff(name_country_full, 
-#                                         dplyr::union(name_country_developed, name_country_frontier))
+panel_common_emerg <- panel_common %>% dplyr::filter(., Country %in% name_country_emerging)
+trend_emerg <- func_div_trend_NW(panel_common_emerg, formula = form_trend)
 
-# Developed countries: OLS and trends
-nest_panel_common_dev <- nest_panel_common %>%
-  dplyr::filter(Country %in% name_country_developed) %>%
-  dplyr::select(Country, data, Div_NA_fraction) %>%
-  dplyr::mutate('summary_trend_NW' = purrr::map(data, func_div_trend_NW)) 
+panel_common_emerg_pre <- panel_common_emerg %>% dplyr::filter(., Year < 2000)
+trend_emerg_pre <- func_div_trend_NW(panel_common_emerg_pre, formula = form_trend)
 
-temp_dev_OLS <- nest_panel_common_dev %>%
-  dplyr::select(-summary_trend_NW) %>%
-  dplyr::filter(Div_NA_fraction < 0.75) %>% # else regressions crash
-  dplyr::mutate('summary_OLS' = purrr::map(data, func_div_ols)) %>%
-  dplyr::select(-data)
+panel_common_emerg_post <- panel_common_emerg %>% dplyr::filter(., Year >= 2000)
+trend_emerg_post <- func_div_trend_NW(panel_common_emerg_post, formula = form_trend)
 
-nest_panel_common_dev <- nest_panel_common_dev %>%
-  dplyr::full_join(., temp_dev_OLS, by = c('Country', 'Div_NA_fraction')) 
+########################################################################
+################ FOR PRINTING OUTPUTS (TABLE 4) ########################
+########################################################################
 
-# Emerging countries: OLS and trends
-nest_panel_common_emerging <- nest_panel_common %>%
-  dplyr::filter(Country %in% name_country_emerging) %>%
-  dplyr::select(Country, data, Div_NA_fraction) %>%
-  dplyr::mutate('summary_trend_NW' = purrr::map(data, func_div_trend_NW)) 
+trend_dev_emerg_pre_post <- rbind('Developed' = func_trend_print(trend_dev),
+                                  'Emerging'  = func_trend_print(trend_emerg),
+                                  'Developed Pre 2000' = func_trend_print(trend_dev_pre),
+                                  'Emerging Pre 2000' = func_trend_print(trend_emerg_pre),
+                                  'Developed Post 2000' = func_trend_print(trend_dev_post),
+                                  'Emerging Post 2000' = func_trend_print(trend_emerg_post))
 
-temp_emerg_OLS <- nest_panel_common_emerging %>%
-  dplyr::select(-summary_trend_NW) %>%
-  dplyr::filter(Div_NA_fraction < 0.75) %>% # else regressions crash
-  dplyr::mutate('summary_OLS' = purrr::map(data, func_div_ols)) %>%
-  dplyr::select(-data)
+#########################################################################
 
-nest_panel_common_emerging <- nest_panel_common_emerging %>%
-  dplyr::full_join(., temp_emerg_OLS, by = c('Country', 'Div_NA_fraction'))
 
+################################################
+### Computing OLS for each country (TABLE 7) ###
+################################################
+
+### Full sample of countries
+
+nest_panel_common <- nest_panel_common %>%
+  dplyr::mutate('summary_OLS' = purrr::map(data, func_div_ols))
+
+# name_country_panel_frontier <- c('Argentina', 'Bahrain', 'Bangladesh', 'Botswana', 
+#                            'Bulgaria', "Cote d'Ivoire", 'Croatia', 'Cyprus', 
+#                            'Ecuador', 'Estonia', 'Ghana', 'Jamaica', 'Jordan', 
+#                            'Kazakhstan', 'Kenya', 'Kuwait', 'Latvia', 'Lebanon', 
+#                            'Lithuania', 'Mauritius', 'Namibia', 'Nigeria', 
+#                            'Oman', 'Pakistan', 'Panama', 'Qatar', 'Romania', 
+#                            'Slovakia', 'Slovenia', 'Sri Lanka', 'Trinidad', 
+#                            'Tunisia', 'Ukraine', 'UAE', 'Vietnam', 'Zambia')
+
+####################################################################
+### OLS by countries: Developed, emerging and frontier (TABLE 7) ###
+####################################################################
+
+name_country_frontier <- c('Bangladesh', 'Botswana', 'Bulgaria', "Cote d'Ivoire", 
+                           'Ecuador', 'Ghana', 'Jamaica', 'Jordan',  'Kazakhstan',
+                           'Kenya', 'Lebanon', 'Mauritius', 'Namibia', 'Nigeria', 
+                           'Oman', 'Pakistan', 'Panama', 'Romania', 'Sri Lanka', 
+                           'Trinidad', 'Tunisia', 'Ukraine', 'Vietnam', 'Zambia')
+
+name_country_emerging_alt <- dplyr::setdiff(name_country_full, 
+                                            dplyr::union(name_country_developed, 
+                                                         name_country_frontier))
+# Developed countries 
+OLS_dev <- func_div_ols(panel_common_dev) 
+
+# Emerging countries (alternative list)
+panel_common_emerg_alt <- dplyr::filter(panel_common, Country %in% name_country_emerging_alt)
+OLS_emerg <- func_div_ols(panel_common_emerg_alt) #emerging countries 
+
+# Frontier countries (after removing overlaps with developed countries)
+panel_common_frontier <- dplyr::filter(panel_common, Country %in% name_country_frontier)
+OLS_frontier <- func_div_ols(panel_common_frontier)
+
+########################################################################
+################ FOR PRINTING OUTPUTS (TABLE 7) ########################
+########################################################################
+
+OLS_dev_emerg_frontier <- rbind(OLS_dev$coefficients, 
+                                OLS_emerg$coefficients, 
+                                OLS_frontier$coefficients)
+
+OLS_full_print <- map(nest_panel_common$summary_OLS, 
+                      function(ols_summary){return(ols_summary$coefficients)})
+names(OLS_full_print) <- name_country_full
+
+########################################################################
+
+# temp_dev_OLS <- nest_panel_common_dev %>%
+#   dplyr::select(-summary_trend_NW) %>%
+#   dplyr::filter(Div_NA_fraction < 0.75) %>% # else regressions crash
+#   dplyr::mutate('summary_OLS' = purrr::map(data, func_div_ols)) %>%
+#   dplyr::select(-data)
+# 
+# nest_panel_common_dev <- nest_panel_common_dev %>%
+#   dplyr::full_join(., temp_dev_OLS, by = c('Country', 'Div_NA_fraction')) 
+
+# ## Emerging countries: Trends ##
+# nest_panel_common_emerging <- nest_panel_common %>%
+#   dplyr::filter(Country %in% name_country_emerging) %>%
+#   dplyr::select(Country, data, Div_NA_fraction) %>%
+#   dplyr::mutate('summary_trend_NW' = purrr::map(data, func_div_trend_NW)) 
+
+## Emerging countries: OLS ##
+
+# nest_panel_common_emerging_alt <- nest_panel_common %>%
+#   dplyr::filter(Country %in% name_country_panel_emerging) %>%
+#   dplyr::select(Country, data, Div_NA_fraction) %>%
+#   dplyr::mutate('summary_OLS' = purrr::map(data, func_div_ols))
+
+# temp_emerg_OLS <- nest_panel_common_emerging %>%
+#   dplyr::select(-summary_trend_NW) %>%
+#   dplyr::filter(Div_NA_fraction < 0.75) %>% # else regressions crash
+#   dplyr::mutate('summary_OLS' = purrr::map(data, func_div_ols)) %>%
+#   dplyr::select(-data)
+
+# nest_panel_common_emerging <- nest_panel_common_emerging %>%
+#   dplyr::full_join(., temp_emerg_OLS, by = c('Country', 'Div_NA_fraction'))
+
+
+## Frontier countries: OLS ##
+
+# nest_panel_common_frontier <- nest_panel_common %>%
+#   dplyr::select(Country, data, Div_NA_fraction) %>%
+#   dplyr::filter(Country %in% name_country_panel_frontier) %>%
+#   dplyr::mutate('summary_OLS' = purrr::map(data, func_div_ols))
 
 ### Pre- and post-2000 trends in developed and emerging ###
 
 ## Developed ##
 
-nest_panel_common_dev <- nest_panel_common_dev %>%
-  dplyr::mutate('Pre_2000' = purrr::map(data, func_pre00),
-                'Post_2000' = purrr::map(data, func_post00),
-                'Div_NA_frac_pre' = purrr::map_dbl(Pre_2000, func_div_frac_NA),
-                'Post00_trend' = purrr::map(Post_2000, func_div_trend_NW))
-
-temp_pre_dev <- nest_panel_common_dev %>%
-  dplyr::select(c(Country, Pre_2000, Div_NA_frac_pre)) %>%
-  dplyr::filter(Div_NA_frac_pre < 0.9) %>% # else regressions crash
-  dplyr::mutate('Pre00_trend' = purrr::map(Pre_2000, func_div_trend_NW)) %>%
-  dplyr::select(-Pre_2000)
-
-nest_panel_common_dev <- nest_panel_common_dev %>%
-  dplyr::full_join(., temp_pre_dev, by = c('Country', 'Div_NA_frac_pre'))
-
-## Emerging ##
-
-nest_panel_common_emerging <- nest_panel_common_emerging %>%
-  dplyr::mutate('Pre_2000' = purrr::map(data, func_pre00),
-                'Post_2000' = purrr::map(data, func_post00),
-                'Div_NA_frac_pre' = purrr::map_dbl(Pre_2000, func_div_frac_NA),
-                'Post00_trend' = purrr::map(Post_2000, func_div_trend_NW))
-
-temp_pre_emerg <- nest_panel_common_emerging %>%
-  dplyr::select(c(Country, Pre_2000, Div_NA_frac_pre)) %>%
-  dplyr::filter(Div_NA_frac_pre < 0.9) %>% # else regressions crash
-  dplyr::mutate('Pre00_trend' = purrr::map(Pre_2000, func_div_trend_NW)) %>%
-  dplyr::select(-Pre_2000)
-
-nest_panel_common_emerging <- nest_panel_common_emerging %>%
-  dplyr::full_join(., temp_pre_emerg, by = c('Country', 'Div_NA_frac_pre'))
+# nest_panel_common_dev <- nest_panel_common_dev %>%
+#   dplyr::mutate('Pre_2000' = purrr::map(data, func_pre00),
+#                 'Post_2000' = purrr::map(data, func_post00),
+#                 'Div_NA_frac_pre' = purrr::map_dbl(Pre_2000, func_div_frac_NA),
+#                 'Post00_trend' = purrr::map(Post_2000, func_div_trend_NW))
+# 
+# temp_pre_dev <- nest_panel_common_dev %>%
+#   dplyr::select(c(Country, Pre_2000, Div_NA_frac_pre)) %>%
+#   dplyr::filter(Div_NA_frac_pre < 0.9) %>% # else regressions crash
+#   dplyr::mutate('Pre00_trend' = purrr::map(Pre_2000, func_div_trend_NW)) %>%
+#   dplyr::select(-Pre_2000)
+# 
+# nest_panel_common_dev <- nest_panel_common_dev %>%
+#   dplyr::full_join(., temp_pre_dev, by = c('Country', 'Div_NA_frac_pre'))
+# 
+# ## Emerging ##
+# 
+# nest_panel_common_emerging <- nest_panel_common_emerging %>%
+#   dplyr::mutate('Pre_2000' = purrr::map(data, func_pre00),
+#                 'Post_2000' = purrr::map(data, func_post00),
+#                 'Div_NA_frac_pre' = purrr::map_dbl(Pre_2000, func_div_frac_NA),
+#                 'Post00_trend' = purrr::map(Post_2000, func_div_trend_NW))
+# 
+# temp_pre_emerg <- nest_panel_common_emerging %>%
+#   dplyr::select(c(Country, Pre_2000, Div_NA_frac_pre)) %>%
+#   dplyr::filter(Div_NA_frac_pre < 0.9) %>% # else regressions crash
+#   dplyr::mutate('Pre00_trend' = purrr::map(Pre_2000, func_div_trend_NW)) %>%
+#   dplyr::select(-Pre_2000)
+# 
+# nest_panel_common_emerging <- nest_panel_common_emerging %>%
+#   dplyr::full_join(., temp_pre_emerg, by = c('Country', 'Div_NA_frac_pre'))
 
 
 # func_extract_trend_summary <- function(trend_summary)
