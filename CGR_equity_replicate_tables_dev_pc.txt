@@ -1,0 +1,70 @@
+FORMULA: Div ~ TED + VIX + SENT + FEDFUNDS + ERM + EZ + PC1
+
+Oneway (individual) effect Within Model
+
+Call:
+plm::plm(formula = formula, data = panel_data, effect = "individual", 
+    model = mdl, type = "HC0")
+
+Unbalanced Panel: n = 82, T = 2-21, N = 1347
+
+Residuals:
+     Min.   1st Qu.    Median   3rd Qu.      Max. 
+-68.35789  -7.83416  -0.31406   8.34141  43.50360 
+
+Coefficients:
+           Estimate Std. Error t value  Pr(>|t|)    
+TED      -20.792795   3.307926 -6.2857 4.490e-10 ***
+VIX        0.141451   0.259816  0.5444 0.5862446    
+SENT      -0.765134   1.078421 -0.7095 0.4781490    
+FEDFUNDS   2.192376   0.561232  3.9064 9.868e-05 ***
+ERM        8.916579   2.361590  3.7757 0.0001670 ***
+EZ       -14.746905   3.816063 -3.8644 0.0001170 ***
+PC1       -0.060146   0.017363 -3.4640 0.0005501 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Total Sum of Squares:    361860
+Residual Sum of Squares: 233020
+R-Squared:      0.35603
+Adj. R-Squared: 0.31099
+F-statistic: 99.3592 on 7 and 1258 DF, p-value: < 2.22e-16
+
+........................................................................
+
+FORMULA: Div ~ TED + VIX + SENT + FEDFUNDS + ERM + EZ + Agg_econ_risk + 
+    Agg_fin_risk + Agg_pol_risk + Liq_risk + PC1
+
+Oneway (individual) effect Within Model
+
+Call:
+plm::plm(formula = formula, data = panel_data, effect = "individual", 
+    model = mdl, type = "HC0")
+
+Unbalanced Panel: n = 73, T = 1-21, N = 1051
+
+Residuals:
+    Min.  1st Qu.   Median  3rd Qu.     Max. 
+-33.6851  -8.7058  -0.1519   8.1928  35.2795 
+
+Coefficients:
+                Estimate Std. Error t value  Pr(>|t|)    
+TED           -22.462611   2.926886 -7.6746 4.047e-14 ***
+VIX             0.383341   0.223321  1.7165   0.08638 .  
+SENT            3.841539   1.682309  2.2835   0.02262 *  
+FEDFUNDS        1.025621   0.668958  1.5332   0.12556    
+ERM             3.210953   2.029972  1.5818   0.11403    
+EZ            -24.307548   4.040868 -6.0154 2.542e-09 ***
+Agg_econ_risk  -1.164360   0.234694 -4.9612 8.275e-07 ***
+Agg_fin_risk    0.458208   0.239177  1.9158   0.05569 .  
+Agg_pol_risk   -0.142117   0.164670 -0.8630   0.38833    
+Liq_risk        8.967520   8.235837  1.0888   0.27650    
+PC1            -0.041324   0.017213 -2.4007   0.01655 *  
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Total Sum of Squares:    309970
+Residual Sum of Squares: 156140
+R-Squared:      0.49628
+Adj. R-Squared: 0.45304
+F-statistic: 86.6093 on 11 and 967 DF, p-value: < 2.22e-16

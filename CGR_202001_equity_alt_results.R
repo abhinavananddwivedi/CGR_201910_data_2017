@@ -286,108 +286,6 @@ names(OLS_full_print) <- name_country_full
 
 ########################################################################
 
-# temp_dev_OLS <- nest_panel_common_dev %>%
-#   dplyr::select(-summary_trend_NW) %>%
-#   dplyr::filter(Div_NA_fraction < 0.75) %>% # else regressions crash
-#   dplyr::mutate('summary_OLS' = purrr::map(data, func_div_ols)) %>%
-#   dplyr::select(-data)
-# 
-# nest_panel_common_dev <- nest_panel_common_dev %>%
-#   dplyr::full_join(., temp_dev_OLS, by = c('Country', 'Div_NA_fraction')) 
-
-# ## Emerging countries: Trends ##
-# nest_panel_common_emerging <- nest_panel_common %>%
-#   dplyr::filter(Country %in% name_country_emerging) %>%
-#   dplyr::select(Country, data, Div_NA_fraction) %>%
-#   dplyr::mutate('summary_trend_NW' = purrr::map(data, func_div_trend_NW)) 
-
-## Emerging countries: OLS ##
-
-# nest_panel_common_emerging_alt <- nest_panel_common %>%
-#   dplyr::filter(Country %in% name_country_panel_emerging) %>%
-#   dplyr::select(Country, data, Div_NA_fraction) %>%
-#   dplyr::mutate('summary_OLS' = purrr::map(data, func_div_ols))
-
-# temp_emerg_OLS <- nest_panel_common_emerging %>%
-#   dplyr::select(-summary_trend_NW) %>%
-#   dplyr::filter(Div_NA_fraction < 0.75) %>% # else regressions crash
-#   dplyr::mutate('summary_OLS' = purrr::map(data, func_div_ols)) %>%
-#   dplyr::select(-data)
-
-# nest_panel_common_emerging <- nest_panel_common_emerging %>%
-#   dplyr::full_join(., temp_emerg_OLS, by = c('Country', 'Div_NA_fraction'))
-
-
-## Frontier countries: OLS ##
-
-# nest_panel_common_frontier <- nest_panel_common %>%
-#   dplyr::select(Country, data, Div_NA_fraction) %>%
-#   dplyr::filter(Country %in% name_country_panel_frontier) %>%
-#   dplyr::mutate('summary_OLS' = purrr::map(data, func_div_ols))
-
-### Pre- and post-2000 trends in developed and emerging ###
-
-## Developed ##
-
-# nest_panel_common_dev <- nest_panel_common_dev %>%
-#   dplyr::mutate('Pre_2000' = purrr::map(data, func_pre00),
-#                 'Post_2000' = purrr::map(data, func_post00),
-#                 'Div_NA_frac_pre' = purrr::map_dbl(Pre_2000, func_div_frac_NA),
-#                 'Post00_trend' = purrr::map(Post_2000, func_div_trend_NW))
-# 
-# temp_pre_dev <- nest_panel_common_dev %>%
-#   dplyr::select(c(Country, Pre_2000, Div_NA_frac_pre)) %>%
-#   dplyr::filter(Div_NA_frac_pre < 0.9) %>% # else regressions crash
-#   dplyr::mutate('Pre00_trend' = purrr::map(Pre_2000, func_div_trend_NW)) %>%
-#   dplyr::select(-Pre_2000)
-# 
-# nest_panel_common_dev <- nest_panel_common_dev %>%
-#   dplyr::full_join(., temp_pre_dev, by = c('Country', 'Div_NA_frac_pre'))
-# 
-# ## Emerging ##
-# 
-# nest_panel_common_emerging <- nest_panel_common_emerging %>%
-#   dplyr::mutate('Pre_2000' = purrr::map(data, func_pre00),
-#                 'Post_2000' = purrr::map(data, func_post00),
-#                 'Div_NA_frac_pre' = purrr::map_dbl(Pre_2000, func_div_frac_NA),
-#                 'Post00_trend' = purrr::map(Post_2000, func_div_trend_NW))
-# 
-# temp_pre_emerg <- nest_panel_common_emerging %>%
-#   dplyr::select(c(Country, Pre_2000, Div_NA_frac_pre)) %>%
-#   dplyr::filter(Div_NA_frac_pre < 0.9) %>% # else regressions crash
-#   dplyr::mutate('Pre00_trend' = purrr::map(Pre_2000, func_div_trend_NW)) %>%
-#   dplyr::select(-Pre_2000)
-# 
-# nest_panel_common_emerging <- nest_panel_common_emerging %>%
-#   dplyr::full_join(., temp_pre_emerg, by = c('Country', 'Div_NA_frac_pre'))
-
-
-# func_extract_trend_summary <- function(trend_summary)
-# {
-#   # This function accepts a summary of trend regression
-#   # and returns the relevant row and column results from the 
-#   # trend regression
-#   lm_coeff <- trend_summary$coefficients
-#   name_select <- c('Estimate', 't value', 'Pr(>|t|)')
-#   
-#   # Ignore the first row for intercept
-#   lm_trend <- lm_coeff[2, dplyr::intersect(name_select, colnames(lm_coeff))]
-#   
-#   return(lm_trend)
-# }
-# 
-# func_extract_ols_summary <- function(lm_summary)
-# {
-#   # This function accepts a summary of linear regression
-#   # and returns the relevant column results from the 
-#   # regression coefficient matrix
-#   lm_coeff <- lm_summary$coefficients
-#   name_select <- c('Estimate', 't value', 'Pr(>|t|)')
-#   
-#   lm_ols <- lm_coeff[, dplyr::intersect(name_select, colnames(lm_coeff))]
-#   
-#   return(lm_ols)
-# }
 
 ####################################
 ### Panel estimation begins here ###
@@ -515,7 +413,50 @@ panel_agg_pol_risk <- func_sum_row(panel_political)
 panel_dev_indicators <- readr::read_csv('Development_Indicators_201704.csv') %>%
   dplyr::rename('Country' = `Country Name`,
                 'Country_internet' = `Internet users (per 100 people)`)
+# Nesting by country
+nest_panel_dev_indicators <- panel_dev_indicators %>%
+  dplyr::group_by(Country) %>%
+  tidyr::nest()
 
+year_max = max(panel_common$Year)
+year_min = min(panel_common$Year)
+
+func_dev_pc1 <- function(country_df, T = 0.2)
+{
+  # This function accepts a country dataframe and a tolerance
+  # fraction for missing values. It filters years in 1986 to 2012 
+  # and computes PC1 from columns having more than 50% non-missing 
+  # entries
+  
+  df <- country_df %>%
+    dplyr::filter(Year >= year_min & Year <= year_max) 
+  
+  col_year <- df$Year
+  
+  # Missing values in each column
+  col_NA <- apply(df, 2, function(vec){sum(is.na(vec))})
+  # Select colunms with more than fraction T non-missing values
+  df_2 <- df[, col_NA <= T*nrow(df)]
+  # Fill residual missing values with medians
+  df_3 <- func_NA_med_df(df_2[, -1]) #remove years
+  # Compute principal components
+  dev_pc <- prcomp(df_3)$x
+  dev_pc_1 <- data.frame('Year' = col_year, 'PC1' = dev_pc[, 1])
+  # Return 1st PC
+  return(dev_pc_1)
+
+}
+
+# Compute dev pc 1 for each country in our sample
+nest_panel_dev_indicators <- nest_panel_dev_indicators %>%
+  dplyr::filter(Country %in% name_country_full) %>%
+  dplyr::mutate('Dev_PC1' = purrr::map(data, func_dev_pc1))
+# Collect in panel format
+panel_dev_pc1 <- nest_panel_dev_indicators %>%
+  dplyr::select(-data) %>%
+  tidyr::unnest()
+
+# Country internet (as developmental factor)
 panel_country_internet <- panel_dev_indicators %>%
   dplyr::select(Country, Year, Country_internet)
 
@@ -526,38 +467,56 @@ panel_idio <- panel_agg_econ %>%
   dplyr::full_join(., panel_agg_fin, by = c('Country', 'Year')) %>%
   dplyr::full_join(., panel_agg_pol_risk, by = c('Country', 'Year')) %>%
   dplyr::full_join(., panel_liq, by = c('Country', 'Year')) %>%
-  dplyr::full_join(., panel_country_internet, by = c('Country', 'Year'))
+  dplyr::full_join(., panel_country_internet, by = c('Country', 'Year')) %>%
+  dplyr::full_join(., panel_dev_pc1, by = c('Country', 'Year'))
 
 # Joining the common and idiosyncratic panels together
 panel_common_idio <- panel_common_2 %>%
   dplyr::left_join(., panel_idio, by = c('Country', 'Year'))
 
+###############
 ### TABLE 8 ###
+###############
 
-# Replacing global internet with country internet 
+### Replacing global internet with country internet 
 form_common_country_internet <- Div ~ TED + VIX + SENT + FEDFUNDS + ERM + EZ + Country_internet
 
 panel_est_common_country_internet <- func_panel_est(formula = form_common_country_internet,
                                                     panel_data = panel_common_idio)
 
+### Replacing global internet with developmental PC1
+form_common_dev_pc1 <- Div ~ TED + VIX + SENT + FEDFUNDS + ERM + EZ + PC1
 
+panel_est_common_dev_pc1 <- func_panel_est(formula = form_common_dev_pc1, 
+                                           panel_data = panel_common_idio)
+
+###############
 ### TABLE 9 ###
+###############
 
-# With risks only: economic, political, financial, liquidity 
+### With risks only: economic, political, financial, liquidity 
 form_common_idio <- Div ~ TED + VIX + SENT + FEDFUNDS + 
   ERM + EZ + Agg_econ_risk + Agg_fin_risk + Agg_pol_risk + Liq_risk
 
 panel_est_common_idio <- func_panel_est(formula = form_common_idio, panel_data = panel_common_idio)
 
-# With risks: economic, political, financial, liquidity + Country internet
+### With risks: economic, political, financial, liquidity + Country internet
 form_common_idio_country_internet <- Div ~ TED + VIX + SENT + FEDFUNDS + 
   ERM + EZ + Agg_econ_risk + Agg_fin_risk + Agg_pol_risk + Liq_risk + Country_internet
 
 panel_est_common_idio_country_internet <- func_panel_est(formula = form_common_idio_country_internet, 
                                                          panel_data = panel_common_idio)
 
+### With risks: economic, political, financial, liquidity + Developmental PC1
+form_common_idio_dev_pc1 <- Div ~ TED + VIX + SENT + FEDFUNDS + 
+  ERM + EZ + Agg_econ_risk + Agg_fin_risk + Agg_pol_risk + Liq_risk + PC1
 
+panel_est_common_idio_dev_pc1 <- func_panel_est(formula = form_common_idio_dev_pc1, 
+                                                panel_data = panel_common_idio)
+
+################
 ### TABLE 10 ###
+################
 
 # Developed countries only
 panel_est_common_idio_country_internet_dev <- func_panel_est(formula = form_common_idio_country_internet, 
