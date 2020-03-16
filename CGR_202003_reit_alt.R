@@ -92,7 +92,7 @@ func_valid_ret <- function(df, n = num_reit_usable)
 nest_year_return <- nest_year_return %>%
   dplyr::mutate('LHS_country_valid' = purrr::map(data, func_valid_ret))
 
-year_cohort <- 1986
+year_cohort <- 2000
 
 func_rm_full_NA <- function(df)
 {
