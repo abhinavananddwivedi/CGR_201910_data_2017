@@ -4,14 +4,14 @@ library(tidyverse)
 ### The previous dataset---till 2012 ###
 ########################################
 
-df_bond <- readr::read_csv('FTS_Data_Bond.csv',
-                             na = c("", "NA", ".", " ", "NaN", 'Inf', '-Inf'),
-                             skip = 3,
-                             col_names = T,
-                             col_types = cols(.default = col_double(),
-                                              Date = col_date(format = "%m/%d/%Y")))
+df_reit <- readr::read_csv('FTS_Data_REIT.csv',
+                           na = c("", "NA", ".", " ", "NaN", 'Inf', '-Inf'),
+                           skip = 3,
+                           col_names = T,
+                           col_types = cols(.default = col_double(),
+                                            Date = col_date(format = "%m/%d/%Y")))
 
-df_bond <- df_bond %>%
+df_reit <- df_reit %>%
   dplyr::mutate('Year' = lubridate::year(Date)) %>%
   dplyr::mutate('Canada_lag' = dplyr::lag(Canada)) %>% #include one-day lags
   dplyr::mutate('US_lag' = dplyr::lag(US)) %>% #include one-day lags
@@ -22,13 +22,13 @@ df_bond <- df_bond %>%
 ### The new dataset---updated till 2018 ###
 ###########################################
 
-# df_bond <- readr::read_csv('CGR_bond_2019.csv',
+# df_reit <- readr::read_csv('CGR_reit_2019.csv',
 #                              na = c("", "NA", ".", " ", "NaN", 'Inf', '-Inf'),
 #                              col_names = T,
 #                              col_types = cols(.default = col_double(),
 #                                               Date = col_date(format = "%d/%m/%Y")))
 # 
-# df_bond <- df_bond %>%
+# df_reit <- df_reit %>%
 #   dplyr::mutate('Year' = lubridate::year(Date)) %>%
 #   dplyr::filter(Year < 2019) %>%
 #   dplyr::mutate('Canada_lag' = dplyr::lag(Canada)) %>% #include one-day lags
@@ -37,7 +37,7 @@ df_bond <- df_bond %>%
 
 ### Analysis begins here ###
 
-name_country_full <- df_bond %>%
+name_country_full <- df_reit %>%
   dplyr::select(-c(Date, Year, Canada_lag, US_lag)) %>%
   colnames(.)
 
@@ -52,36 +52,36 @@ func_deduplic <- function(vec)
 }
 
 # Ignoring duplicated entries
-df_bond_deduplic <- df_bond %>%
+df_reit_deduplic <- df_reit %>%
   dplyr::select(-c(Year, Date)) %>%
   apply(., 2, func_deduplic) %>%
   tibble::as_tibble(.) %>%
-  tibble::add_column('Date' = df_bond$Date, 'Year' = df_bond$Year) %>%
+  tibble::add_column('Date' = df_reit$Date, 'Year' = df_reit$Year) %>%
   dplyr::select(Date, Year, everything(.))
 
 # Taking log returns = log(I_t) - log(I_{t-1})
-df_bond_return <- df_bond_deduplic %>%
+df_reit_return <- df_reit_deduplic %>%
   dplyr::select(-c(Date, Year)) %>%
   apply(., 2, function(vec){return(c(NA, diff(log(vec))))}) %>%
   tibble::as_tibble(.) %>%
-  tibble::add_column('Date' = df_bond$Date, 'Year' = df_bond$Year) %>%
+  tibble::add_column('Date' = df_reit$Date, 'Year' = df_reit$Year) %>%
   dplyr::select(Date, Year, everything(.))
 
 # Using nested dataframes
-nest_year_return <- df_bond_return %>%
+nest_year_return <- df_reit_return %>%
   dplyr::select(-Date) %>%
   dplyr::group_by(Year) %>%
   tidyr::nest(.)
 
 # How many valid returns to use per year?
-num_bond_usable <- 50
-#num_bond_usable <- 100
+num_reit_usable <- 50
+#num_reit_usable <- 100
 
-func_valid_ret <- function(df, n = num_bond_usable)
+func_valid_ret <- function(df, n = num_reit_usable)
 {
   # This function accepts a return data matrix and 
   # accepts only those columns which have enough
-  # usable entries ( >= num_bond_usable)
+  # usable entries ( >= num_reit_usable)
   temp_NA <- apply(df, 2, function(vec){sum(is.na(vec))})
   
   df_2 <- df[, temp_NA < (nrow(df) - n)]
@@ -103,7 +103,7 @@ func_rm_full_NA <- function(df)
 }
 
 # Names of pre-86 cohort countries
-name_country_pre_cohort <- df_bond_return %>%
+name_country_pre_cohort <- df_reit_return %>%
   dplyr::filter(Year < year_cohort) %>%
   dplyr::select(-c(Date, Year, Canada_lag, US_lag)) %>%
   func_rm_full_NA(.) %>%
@@ -187,8 +187,8 @@ func_pc_90 <- function(vec)
 
 # How many PCs needed for explaining 90% of variation?
 num_pc_90 <- sapply(nest_year_return_LHS_RHS$Share, func_pc_90)
-num_pc_bond <- ceiling(median(num_pc_90)) # 12 are enough
-# num_pc_bond <- max(num_pc_90) # At John's suggestion
+num_pc_reit <- ceiling(median(num_pc_90)) # 12 are enough
+# num_pc_reit <- max(num_pc_90) # At John's suggestion
 
 #############################################
 ### PC computation for ordinary countries ###
@@ -200,7 +200,7 @@ nest_year_return_LHS_RHS <- nest_year_return_LHS_RHS %>%
   dplyr::mutate('PC_out_sample' = purrr::map2(RHS_country_clean, Lag_eig_vec,
                                               function(df1, df2){return(df1%*%df2)}), #note df1%*%df2 [!]
                 'PC_out_sample_90' = purrr::map(PC_out_sample,
-                                                function(df){return(df[, 1:num_pc_bond])}))
+                                                function(df){return(df[, 1:num_pc_reit])}))
 
 
 nest_year_regression <- nest_year_return_LHS_RHS %>%
@@ -403,10 +403,10 @@ func_select_PC_list <- function(list)
 {
   # This function accepts a list of PCs matrices and 
   # returns the list with each PC matrix with 
-  # number of columns from 1 to num_pc_bond
+  # number of columns from 1 to num_pc_reit
   func_select_PC_df <- function(df)
   {
-    return(df[, 1:num_pc_bond])
+    return(df[, 1:num_pc_reit])
   }
   
   list1 <- purrr::map(list, func_select_PC_df)
@@ -455,7 +455,7 @@ func_attach_name_pre_cohort <- function(vec, LHS_data)
 
 nest_year_pre_cohort_regress <- nest_year_pre_cohort_regress %>%
   dplyr::mutate('Div_ind_pre_cohort_name' = purrr::map2(Div_ind_pre_cohort, LHS_pre_cohort,
-                                                       func_attach_name_pre_cohort))
+                                                        func_attach_name_pre_cohort))
 
 ######################################################################################
 
