@@ -180,52 +180,52 @@ print_trend_post_2 <- dplyr::bind_rows(print_trend_post) %>% t(.)
 
 ### By countries: developed and non-developed (emerging) ###
 
-# name_country_developed <-  c('Argentina', 'Australia', 'Austria', 
-#                              'Bahrain', 'Belgium', 'Canada', 'Chile', 
-#                              'Croatia', 'Cyprus', 'Czech Rep.', 'Denmark', 
-#                              'Estonia',  'Finland', 'France', 'Germany', 
-#                              'Greece', 'Hong Kong', 'Hungary', 'Iceland', 
-#                              'Ireland', 'Israel', 'Italy', 'Japan', 'Kuwait', 
-#                              'Latvia', 'Lithuania', 'Luxembourg', 'Malta', 
-#                              'Netherlands', 'New Zealand', 'Norway', 'Poland', 
-#                              'Portugal', 'Qatar', 'Saudi Arabia', 'Singapore', 
-#                              'Slovakia', 'Slovenia', 'Spain', 'Sweden', 
-#                              'Switzerland', 'UAE', 'UK', 'US')
-# 
-# panel_common_dev <- panel_common %>% dplyr::filter(., Country %in% name_country_developed)
-# trend_dev <- func_div_trend_NW(panel_common_dev, formula = form_trend)
+name_country_developed <-  c('Argentina', 'Australia', 'Austria',
+                            'Bahrain', 'Belgium', 'Canada', 'Chile',
+                            'Croatia', 'Cyprus', 'Czech Rep.', 'Denmark',
+                            'Estonia',  'Finland', 'France', 'Germany',
+                            'Greece', 'Hong Kong', 'Hungary', 'Iceland',
+                            'Ireland', 'Israel', 'Italy', 'Japan', 'Kuwait',
+                            'Latvia', 'Lithuania', 'Luxembourg', 'Malta',
+                            'Netherlands', 'New Zealand', 'Norway', 'Poland',
+                            'Portugal', 'Qatar', 'Saudi Arabia', 'Singapore',
+                            'Slovakia', 'Slovenia', 'Spain', 'Sweden',
+                            'Switzerland', 'UAE', 'UK', 'US')
 
-# panel_common_dev_pre <- panel_common_dev %>% dplyr::filter(., Year < 2000)
-# trend_dev_pre <- func_div_trend_NW(panel_common_dev_pre, formula = form_trend)
-# 
-# panel_common_dev_post <- panel_common_dev %>% dplyr::filter(., Year >= 2000)
-# trend_dev_post <- func_div_trend_NW(panel_common_dev_post, formula = form_trend)
+panel_common_dev <- panel_common %>% dplyr::filter(., Country %in% name_country_developed)
+trend_dev <- func_div_trend_NW(panel_common_dev, formula = form_trend)
+
+panel_common_dev_pre <- panel_common_dev %>% dplyr::filter(., Year < 2000)
+trend_dev_pre <- func_div_trend_NW(panel_common_dev_pre, formula = form_trend)
+
+panel_common_dev_post <- panel_common_dev %>% dplyr::filter(., Year >= 2000)
+trend_dev_post <- func_div_trend_NW(panel_common_dev_post, formula = form_trend)
 
 #############################################################################
 ## Trend for the subsample of non-developed (emerging) countries (TABLE 4) ##
 #############################################################################
 
-# name_country_emerging <- dplyr::setdiff(name_country_full, name_country_developed)
-# 
-# panel_common_emerg <- panel_common %>% dplyr::filter(., Country %in% name_country_emerging)
-# trend_emerg <- func_div_trend_NW(panel_common_emerg, formula = form_trend)
-# 
-# panel_common_emerg_pre <- panel_common_emerg %>% dplyr::filter(., Year < 2000)
+name_country_emerging <- dplyr::setdiff(name_country_full, name_country_developed)
+ 
+panel_common_emerg <- panel_common %>% dplyr::filter(., Country %in% name_country_emerging)
+trend_emerg <- func_div_trend_NW(panel_common_emerg, formula = form_trend)
+ 
+panel_common_emerg_pre <- panel_common_emerg %>% dplyr::filter(., Year < 2000)
 # trend_emerg_pre <- func_div_trend_NW(panel_common_emerg_pre, formula = form_trend)
-# 
-# panel_common_emerg_post <- panel_common_emerg %>% dplyr::filter(., Year >= 2000)
-# trend_emerg_post <- func_div_trend_NW(panel_common_emerg_post, formula = form_trend)
+ 
+panel_common_emerg_post <- panel_common_emerg %>% dplyr::filter(., Year >= 2000)
+trend_emerg_post <- func_div_trend_NW(panel_common_emerg_post, formula = form_trend)
 
 ########################################################################
 ################ FOR PRINTING OUTPUTS (TABLE 4) ########################
 ########################################################################
 
-# trend_dev_emerg_pre_post <- rbind('Developed' = func_trend_print(trend_dev),
-#                                   'Emerging'  = func_trend_print(trend_emerg),
-#                                   'Developed Pre 2000' = func_trend_print(trend_dev_pre),
-#                                   'Emerging Pre 2000' = func_trend_print(trend_emerg_pre),
-#                                   'Developed Post 2000' = func_trend_print(trend_dev_post),
-#                                   'Emerging Post 2000' = func_trend_print(trend_emerg_post))
+trend_dev_emerg_pre_post <- rbind('Developed' = func_trend_print(trend_dev),
+                                 'Emerging'  = func_trend_print(trend_emerg),
+                                 'Developed Pre 2000' = func_trend_print(trend_dev_pre),
+#                                 'Emerging Pre 2000' = func_trend_print(trend_emerg_pre),
+                                 'Developed Post 2000' = func_trend_print(trend_dev_post),
+                                 'Emerging Post 2000' = func_trend_print(trend_emerg_post))
 
 #########################################################################
 
@@ -239,38 +239,7 @@ print_trend_post_2 <- dplyr::bind_rows(print_trend_post) %>% t(.)
 nest_panel_common <- nest_panel_common %>%
   dplyr::mutate('summary_OLS' = purrr::map(data, func_div_ols))
 
-# name_country_panel_frontier <- c('Argentina', 'Bahrain', 'Bangladesh', 'Botswana', 
-#                            'Bulgaria', "Cote d'Ivoire", 'Croatia', 'Cyprus', 
-#                            'Ecuador', 'Estonia', 'Ghana', 'Jamaica', 'Jordan', 
-#                            'Kazakhstan', 'Kenya', 'Kuwait', 'Latvia', 'Lebanon', 
-#                            'Lithuania', 'Mauritius', 'Namibia', 'Nigeria', 
-#                            'Oman', 'Pakistan', 'Panama', 'Qatar', 'Romania', 
-#                            'Slovakia', 'Slovenia', 'Sri Lanka', 'Trinidad', 
-#                            'Tunisia', 'Ukraine', 'UAE', 'Vietnam', 'Zambia')
 
-####################################################################
-### OLS by countries: Developed, emerging and frontier (TABLE 7) ###
-####################################################################
-
-# name_country_frontier <- c('Bangladesh', 'Botswana', 'Bulgaria', "Cote d'Ivoire", 
-#                            'Ecuador', 'Ghana', 'Jamaica', 'Jordan',  'Kazakhstan',
-#                            'Kenya', 'Lebanon', 'Mauritius', 'Namibia', 'Nigeria', 
-#                            'Oman', 'Pakistan', 'Panama', 'Romania', 'Sri Lanka', 
-#                            'Trinidad', 'Tunisia', 'Ukraine', 'Vietnam', 'Zambia')
-# 
-# name_country_emerging_alt <- dplyr::setdiff(name_country_full, 
-#                                             dplyr::union(name_country_developed, 
-#                                                          name_country_frontier))
-# Developed countries 
-# OLS_dev <- func_div_ols(panel_common_dev) 
-
-# Emerging countries (alternative list)
-# panel_common_emerg_alt <- dplyr::filter(panel_common, Country %in% name_country_emerging_alt)
-# OLS_emerg <- func_div_ols(panel_common_emerg_alt) #emerging countries 
-
-# Frontier countries (after removing overlaps with developed countries)
-# panel_common_frontier <- dplyr::filter(panel_common, Country %in% name_country_frontier)
-# OLS_frontier <- func_div_ols(panel_common_frontier)
 
 ########################################################################
 ################ FOR PRINTING OUTPUTS (TABLE 7) ########################
@@ -338,33 +307,7 @@ panel_est_pre00 <- func_panel_est(form_common, dplyr::filter(panel_common_2,
 panel_est_post00 <- func_panel_est(form_common, dplyr::filter(panel_common_2, 
                                                               Year >= 2000))
 
-# # Develped country sample, full year sample
-# panel_est_dev <- func_panel_est(form_common, dplyr::filter(panel_common_2, 
-#                                                            Country %in% name_country_developed))
-# 
-# # Emerging country sample, full year sample 
-# panel_est_emerg <- func_panel_est(form_common, dplyr::filter(panel_common_2, 
-#                                                              Country %in% name_country_emerging))
-# 
-# # Developed country sample, Pre 2000
-# panel_est_dev_pre <- func_panel_est(form_common, dplyr::filter(panel_common_2, 
-#                                                                Country %in% name_country_developed &
-#                                                                  Year < 2000))
-# 
-# # Emerging country sample, Pre 2000
-# panel_est_emerg_pre <- func_panel_est(form_common, dplyr::filter(panel_common_2,
-#                                                                  Country %in% name_country_emerging &
-#                                                                    Year < 2000))
-# 
-# # Developed country sample, Post 2000
-# panel_est_dev_post <- func_panel_est(form_common, dplyr::filter(panel_common_2,
-#                                                                 Country %in% name_country_developed &
-#                                                                   Year >= 2000))
-# 
-# # Emerging country sample, Post 2000
-# panel_est_emerg_post <- func_panel_est(form_common, dplyr::filter(panel_common_2,
-#                                                                   Country %in% name_country_emerging &
-#                                                                     Year >= 2000))
+
 
 ##############################################################
 ### Panel estimation with common and idiosyncratic factors ###
