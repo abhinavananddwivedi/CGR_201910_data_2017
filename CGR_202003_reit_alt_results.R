@@ -162,15 +162,15 @@ names(print_trend) <- name_country_full
 print_trend_2 <- dplyr::bind_rows(print_trend) %>% t(.)
 
 ### Full country set, pre 2000 ###
-# panel_trend_print_pre <- nest_panel_pre_post %>%
-#   filter(Div_NA_frac_pre < 0.9) %>% # no regression results otherwise
-#   select(Country, Pre00_trend) %>%
-#   mutate('Coef_year' = purrr::map(Pre00_trend, func_trend_print))
-# 
-# print_trend_pre <- panel_trend_print_pre$Coef_year
-# names(print_trend_pre) <- panel_trend_print_pre$Country
-# 
-# print_trend_pre_2 <- dplyr::bind_rows(print_trend_pre) %>% t(.)
+panel_trend_print_pre <- nest_panel_pre_post %>%
+  filter(Div_NA_frac_pre < 0.9) %>% # no regression results otherwise
+  select(Country, Pre00_trend) %>%
+  mutate('Coef_year' = purrr::map(Pre00_trend, func_trend_print))
+
+print_trend_pre <- panel_trend_print_pre$Coef_year
+names(print_trend_pre) <- panel_trend_print_pre$Country
+
+print_trend_pre_2 <- dplyr::bind_rows(print_trend_pre) %>% t(.)
 
 ### Full country set, post 2000 ###
 panel_trend_print_post <- nest_panel_pre_post %>%
@@ -206,7 +206,7 @@ panel_common_dev <- panel_common %>% dplyr::filter(., Country %in% name_country_
 trend_dev <- func_div_trend_NW(panel_common_dev, formula = form_trend)
 
 panel_common_dev_pre <- panel_common_dev %>% dplyr::filter(., Year < 2000)
-# trend_dev_pre <- func_div_trend_NW(panel_common_dev_pre, formula = form_trend)
+trend_dev_pre <- func_div_trend_NW(panel_common_dev_pre, formula = form_trend)
 
 panel_common_dev_post <- panel_common_dev %>% dplyr::filter(., Year >= 2000)
 trend_dev_post <- func_div_trend_NW(panel_common_dev_post, formula = form_trend)
@@ -221,7 +221,7 @@ panel_common_emerg <- panel_common %>% dplyr::filter(., Country %in% name_countr
 trend_emerg <- func_div_trend_NW(panel_common_emerg, formula = form_trend)
 
 panel_common_emerg_pre <- panel_common_emerg %>% dplyr::filter(., Year < 2000)
-# trend_emerg_pre <- func_div_trend_NW(panel_common_emerg_pre, formula = form_trend)
+trend_emerg_pre <- func_div_trend_NW(panel_common_emerg_pre, formula = form_trend)
 
 panel_common_emerg_post <- panel_common_emerg %>% dplyr::filter(., Year >= 2000)
 trend_emerg_post <- func_div_trend_NW(panel_common_emerg_post, formula = form_trend)
@@ -232,8 +232,8 @@ trend_emerg_post <- func_div_trend_NW(panel_common_emerg_post, formula = form_tr
 
 trend_dev_emerg_pre_post <- rbind('Developed' = func_trend_print(trend_dev),
                                   'Emerging'  = func_trend_print(trend_emerg),
-#                                 'Developed Pre 2000' = func_trend_print(trend_dev_pre),
-#                                 'Emerging Pre 2000' = func_trend_print(trend_emerg_pre),
+                                  'Developed Pre 2000' = func_trend_print(trend_dev_pre),
+                                  'Emerging Pre 2000' = func_trend_print(trend_emerg_pre),
                                   'Developed Post 2000' = func_trend_print(trend_dev_post),
                                   'Emerging Post 2000' = func_trend_print(trend_emerg_post))
 
@@ -315,7 +315,7 @@ form_common_2 <- Div ~ TED + VIX + SENT + FEDFUNDS + INTERNET + EZ
 panel_est_full <- func_panel_est(form_common, panel_common_2)
 
 # Full country sample, Pre-2000
-# panel_est_pre00 <- func_panel_est(form_common, dplyr::filter(panel_common_2, Year < 2000))
+panel_est_pre00 <- func_panel_est(form_common, dplyr::filter(panel_common_2, Year < 2000))
 
 # Full country sample, Post-2000
 panel_est_post00 <- func_panel_est(form_common, dplyr::filter(panel_common_2, 
