@@ -92,7 +92,7 @@ func_valid_ret <- function(df, n = num_reit_usable)
 nest_year_return <- nest_year_return %>%
   dplyr::mutate('LHS_country_valid' = purrr::map(data, func_valid_ret))
 
-year_cohort <- 2000
+year_cohort <- 1986
 
 func_rm_full_NA <- function(df)
 {
@@ -122,8 +122,10 @@ func_select_RHS_countries <- function(df)
   # lags of US and Canada---to be used for the 
   # computation of principal components
   
-  return(df[, c(dplyr::intersect(colnames(df), name_country_pre_cohort), 
-                'Canada_lag', 'US_lag')])
+  colnames_select <- c(dplyr::intersect(colnames(df), name_country_pre_cohort), 
+                       'Canada_lag', 'US_lag')
+  
+  return(df[, colnames_select])
 }
 
 func_select_ordinary <- function(df)
@@ -142,7 +144,8 @@ func_select_pre_cohort <- function(df)
 
 nest_year_return_LHS_RHS <- nest_year_return %>%
   dplyr::filter(Year >= year_cohort) %>%
-  dplyr::mutate('RHS_country' = purrr::map(data, 
+  dplyr::mutate('data_clean' = purrr::map(data, func_rm_full_NA)) %>%
+  dplyr::mutate('RHS_country' = purrr::map(data_clean, 
                                            func_select_RHS_countries)) %>%
   dplyr::mutate('LHS_country_ordinary' = purrr::map(LHS_country_valid, 
                                                     func_select_ordinary)) %>%
@@ -163,12 +166,20 @@ func_NA_med_df <- function(df)
   return(df_2)
 }
 
+func_rm_full_NA_rowcol <- function(df)
+{
+  # This function accepts a dataframe and kill those rows
+  # and columns that are full with NA
+  return(df[rowSums(is.na(df)) < ncol(df), colSums(is.na(df)) < nrow(df)])
+}
+
 
 nest_year_return_LHS_RHS <- nest_year_return_LHS_RHS %>%
   dplyr::mutate('RHS_country_clean' = purrr::map(RHS_country, func_NA_med_df), 
                 'Cov_matrix' = purrr::map(RHS_country_clean, cov),
-                'Eig_val' = purrr::map(Cov_matrix, function(df){return(eigen(df)$values)}),
-                'Eig_vec' = purrr::map(Cov_matrix, function(df){return(eigen(df)$vectors)}),
+                'Cov_clean' = purrr::map(Cov_matrix, func_rm_full_NA_rowcol),
+                'Eig_val' = purrr::map(Cov_clean, function(df){return(eigen(df)$values)}),
+                'Eig_vec' = purrr::map(Cov_clean, function(df){return(eigen(df)$vectors)}),
                 'Share' = purrr::map(Eig_val, function(vec){return(cumsum(vec)/sum(vec))})) %>%
   dplyr::select(-RHS_country)
 

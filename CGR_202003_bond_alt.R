@@ -186,9 +186,10 @@ func_pc_90 <- function(vec)
 }
 
 # How many PCs needed for explaining 90% of variation?
-num_pc_90 <- sapply(nest_year_return_LHS_RHS$Share, func_pc_90)
-num_pc_bond <- ceiling(median(num_pc_90)) # 12 are enough
-# num_pc_bond <- max(num_pc_90) # At John's suggestion
+# num_pc_90 <- sapply(nest_year_return_LHS_RHS$Share, func_pc_90)
+num_pc_90 <- purrr::map_dbl(nest_year_return_LHS_RHS$Share, func_pc_90)
+# num_pc_bond <- ceiling(median(num_pc_90)) # 12 are enough
+num_pc_bond <- max(num_pc_90) # At John's suggestion
 
 #############################################
 ### PC computation for ordinary countries ###
