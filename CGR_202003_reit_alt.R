@@ -13,7 +13,7 @@ df_reit <- readr::read_csv('FTS_Data_REIT.csv',
 
 df_reit <- df_reit %>%
   dplyr::mutate('Year' = lubridate::year(Date)) %>%
-  dplyr::mutate('Canada_lag' = dplyr::lag(Canada)) %>% #include one-day lags
+#  dplyr::mutate('Canada_lag' = dplyr::lag(Canada)) %>% #include one-day lags
   dplyr::mutate('US_lag' = dplyr::lag(US)) %>% #include one-day lags
   dplyr::select(-Date_Number) %>%
   dplyr::select(Date, Year, everything())
@@ -37,8 +37,12 @@ df_reit <- df_reit %>%
 
 ### Analysis begins here ###
 
+# name_country_full <- df_reit %>%
+#   dplyr::select(-c(Date, Year, Canada_lag, US_lag)) %>%
+#   colnames(.)
+
 name_country_full <- df_reit %>%
-  dplyr::select(-c(Date, Year, Canada_lag, US_lag)) %>%
+  dplyr::select(-c(Date, Year, US_lag)) %>%
   colnames(.)
 
 
@@ -103,9 +107,15 @@ func_rm_full_NA <- function(df)
 }
 
 # Names of pre-86 cohort countries
+# name_country_pre_cohort <- df_reit_return %>%
+#   dplyr::filter(Year < year_cohort) %>%
+#   dplyr::select(-c(Date, Year, Canada_lag, US_lag)) %>%
+#   func_rm_full_NA(.) %>%
+#   colnames(.)
+
 name_country_pre_cohort <- df_reit_return %>%
   dplyr::filter(Year < year_cohort) %>%
-  dplyr::select(-c(Date, Year, Canada_lag, US_lag)) %>%
+  dplyr::select(-c(Date, Year, US_lag)) %>%
   func_rm_full_NA(.) %>%
   colnames(.)
 
@@ -122,8 +132,11 @@ func_select_RHS_countries <- function(df)
   # lags of US and Canada---to be used for the 
   # computation of principal components
   
-  colnames_select <- c(dplyr::intersect(colnames(df), name_country_pre_cohort), 
-                       'Canada_lag', 'US_lag')
+  # colnames_select <- c(dplyr::intersect(colnames(df), name_country_pre_cohort),
+  #                      'Canada_lag', 'US_lag')
+  
+  colnames_select <- c(dplyr::intersect(colnames(df), name_country_pre_cohort),
+                       'US_lag')
   
   return(df[, colnames_select])
 }
@@ -144,8 +157,8 @@ func_select_pre_cohort <- function(df)
 
 nest_year_return_LHS_RHS <- nest_year_return %>%
   dplyr::filter(Year >= year_cohort) %>%
-  dplyr::mutate('data_clean' = purrr::map(data, func_rm_full_NA)) %>%
-  dplyr::mutate('RHS_country' = purrr::map(data_clean, 
+#  dplyr::mutate('data_clean' = purrr::map(data, func_rm_full_NA)) %>%
+  dplyr::mutate('RHS_country' = purrr::map(data, 
                                            func_select_RHS_countries)) %>%
   dplyr::mutate('LHS_country_ordinary' = purrr::map(LHS_country_valid, 
                                                     func_select_ordinary)) %>%
@@ -177,9 +190,9 @@ func_rm_full_NA_rowcol <- function(df)
 nest_year_return_LHS_RHS <- nest_year_return_LHS_RHS %>%
   dplyr::mutate('RHS_country_clean' = purrr::map(RHS_country, func_NA_med_df), 
                 'Cov_matrix' = purrr::map(RHS_country_clean, cov),
-                'Cov_clean' = purrr::map(Cov_matrix, func_rm_full_NA_rowcol),
-                'Eig_val' = purrr::map(Cov_clean, function(df){return(eigen(df)$values)}),
-                'Eig_vec' = purrr::map(Cov_clean, function(df){return(eigen(df)$vectors)}),
+#                'Cov_clean' = purrr::map(Cov_matrix, func_rm_full_NA_rowcol),
+                'Eig_val' = purrr::map(Cov_matrix, function(df){return(eigen(df)$values)}),
+                'Eig_vec' = purrr::map(Cov_matrix, function(df){return(eigen(df)$vectors)}),
                 'Share' = purrr::map(Eig_val, function(vec){return(cumsum(vec)/sum(vec))})) %>%
   dplyr::select(-RHS_country)
 
@@ -198,8 +211,8 @@ func_pc_90 <- function(vec)
 
 # How many PCs needed for explaining 90% of variation?
 num_pc_90 <- sapply(nest_year_return_LHS_RHS$Share, func_pc_90)
-num_pc_reit <- ceiling(median(num_pc_90)) # 12 are enough
-# num_pc_reit <- max(num_pc_90) # At John's suggestion
+# num_pc_reit <- ceiling(median(num_pc_90)) # 12 are enough
+num_pc_reit <- min(num_pc_90) 
 
 #############################################
 ### PC computation for ordinary countries ###
@@ -207,7 +220,7 @@ num_pc_reit <- ceiling(median(num_pc_90)) # 12 are enough
 
 # Compute PCs
 nest_year_return_LHS_RHS <- nest_year_return_LHS_RHS %>%
-  dplyr::filter(Year >= year_cohort + 1) %>%
+  dplyr::filter(map(Lag_eig_vec, length) > 1) %>%
   dplyr::mutate('PC_out_sample' = purrr::map2(RHS_country_clean, Lag_eig_vec,
                                               function(df1, df2){return(df1%*%df2)}), #note df1%*%df2 [!]
                 'PC_out_sample_90' = purrr::map(PC_out_sample,
@@ -255,6 +268,7 @@ func_lm_div <- function(df1, df2)
 
 # Compute diversification indices
 nest_year_regression <- nest_year_regression %>%
+  dplyr::filter(map_dbl(LHS_clean, length) > 0) %>%
   dplyr::mutate('Div_ind' = purrr::map2(LHS_clean, PC_out_sample_90,
                                         func_lm_div))
 
@@ -308,7 +322,8 @@ func_rm_col_j <- function(df)
   # column at a time (excluding lags of Canada and US)
   temp_list <- list(NULL)
   
-  df2 <- df[, -c(ncol(df)-1, ncol(df))] #exclude North Am lags
+  # df2 <- df[, -c(ncol(df)-1, ncol(df))] #exclude North Am lags
+  df2 <- df[, -ncol(df)] #exclude US lags
   
   for (j in 1:ncol(df2))
   {
@@ -415,8 +430,11 @@ func_select_PC_list <- function(list)
   # This function accepts a list of PCs matrices and 
   # returns the list with each PC matrix with 
   # number of columns from 1 to num_pc_reit
+  
   func_select_PC_df <- function(df)
   {
+    # ncol_min <- min(ncol(df), num_pc_reit)
+    # return(df[, 1:ncol_min])
     return(df[, 1:num_pc_reit])
   }
   
