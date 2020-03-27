@@ -4,36 +4,36 @@ library(tidyverse)
 ### The previous dataset---till 2012 ###
 ########################################
 
-df_equity <- readr::read_csv('FTS_Data_Equity.csv',
-                            na = c("", "NA", ".", " ", "NaN", 'Inf', '-Inf'),
-                            skip = 3,
-                            col_names = T,
-                            col_types = cols(.default = col_double(),
-                                             Date = col_date(format = "%m/%d/%Y")))
-
-df_equity <- df_equity %>%
- dplyr::mutate('Year' = lubridate::year(Date)) %>%
- dplyr::mutate('Canada_lag' = dplyr::lag(Canada)) %>% #include one-day lags
- dplyr::mutate('US_lag' = dplyr::lag(US)) %>% #include one-day lags
- dplyr::select(-Date_Number) %>%
- dplyr::select(Date, Year, everything())
+# df_equity <- readr::read_csv('FTS_Data_Equity.csv',
+#                             na = c("", "NA", ".", " ", "NaN", 'Inf', '-Inf'),
+#                             skip = 3,
+#                             col_names = T,
+#                             col_types = cols(.default = col_double(),
+#                                              Date = col_date(format = "%m/%d/%Y")))
+# 
+# df_equity <- df_equity %>%
+#  dplyr::mutate('Year' = lubridate::year(Date)) %>%
+#  dplyr::mutate('Canada_lag' = dplyr::lag(Canada)) %>% #include one-day lags
+#  dplyr::mutate('US_lag' = dplyr::lag(US)) %>% #include one-day lags
+#  dplyr::select(-Date_Number) %>%
+#  dplyr::select(Date, Year, everything())
 
 ###########################################
 ### The new dataset---updated till 2018 ###
 ###########################################
 
-# df_equity <- readr::read_csv('CGR_equity_2019.csv',
-#                              na = c("", "NA", ".", " ", "NaN", 'Inf', '-Inf'),
-#                              col_names = T,
-#                              col_types = cols(.default = col_double(),
-#                                               Date = col_date(format = "%d/%m/%Y")))
-# 
-# df_equity <- df_equity %>%
-#   dplyr::mutate('Year' = lubridate::year(Date)) %>%
-#   dplyr::filter(Year < 2019) %>%
-#   dplyr::mutate('Canada_lag' = dplyr::lag(Canada)) %>% #include one-day lags
-#   dplyr::mutate('US_lag' = dplyr::lag(US)) %>% #include one-day lags
-#   dplyr::select(Date, Year, everything())
+df_equity <- readr::read_csv('CGR_equity_2019.csv',
+                             na = c("", "NA", ".", " ", "NaN", 'Inf', '-Inf'),
+                             col_names = T,
+                             col_types = cols(.default = col_double(),
+                                              Date = col_date(format = "%d/%m/%Y")))
+
+df_equity <- df_equity %>%
+  dplyr::mutate('Year' = lubridate::year(Date)) %>%
+  dplyr::filter(Year < 2019) %>%
+  dplyr::mutate('Canada_lag' = dplyr::lag(Canada)) %>% #include one-day lags
+  dplyr::mutate('US_lag' = dplyr::lag(US)) %>% #include one-day lags
+  dplyr::select(Date, Year, everything())
 
 ### Analysis begins here ###
 
