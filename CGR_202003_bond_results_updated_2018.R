@@ -5,7 +5,7 @@ library(lmtest)
 library(sandwich)
 library(plm)
 
-name_script_file <- "CGR_202001_equity_alt.R"
+name_script_file <- "CGR_202001_bond_alt.R"
 source(name_script_file, echo = F) #Compute diversification using original daily index data
 
 summ_stat_div <- apply(Div_ind_full_wide[, - 1], 2, summary) #Compute summary stats
@@ -20,7 +20,7 @@ plot_div <- Div_ind_plot
 #   dplyr::rename('ERM' = `1992 - ERM`, 'EZ' = `2009-10 - EUROZONE`)
 
 
-file_RHS_common <- readr::read_csv('Panel_equity_updated_2018.csv')
+file_RHS_common <- readr::read_csv('Panel_bond_updated_2018.csv')
 
 RHS_common <- file_RHS_common %>%
   dplyr::select(Year, Country, TED, VIX, SENT, FEDFUNDS, INTERNET, ERM, Euro)
@@ -394,7 +394,7 @@ panel_agg_fin <- readr::read_csv('Panel_risk_financial_updated_2018.csv') %>%
   dplyr::select(Country, Year, Agg_fin_risk)
 
 # Liquidity risk
-panel_liq <- readr::read_csv('Panel_risk_liq_equity_updated_2018.csv') %>%
+panel_liq <- readr::read_csv('Panel_risk_liq_bond_updated_2018.csv') %>%
   dplyr::rename('Country' = country, 'Year' = year, 'Agg_liq_risk' = index)
 
 ## Political risk file read
@@ -557,7 +557,7 @@ nest_panel_dev_indicators <- nest_panel_dev_indicators %>%
 # Compute dev pc 1 for each country in our sample
 nest_panel_dev_indicators <- nest_panel_dev_indicators %>%
   dplyr::filter(ncol_no_miss > 2) %>%
-#  dplyr::filter(Country %in% name_country_full) %>%
+  #  dplyr::filter(Country %in% name_country_full) %>%
   dplyr::mutate('Dev_PC1' = purrr::map(data, func_dev_pc1))
 
 
