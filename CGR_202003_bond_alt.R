@@ -4,36 +4,36 @@ library(tidyverse)
 ### The previous dataset---till 2012 ###
 ########################################
 
-df_bond <- readr::read_csv('FTS_Data_Bond.csv',
-                             na = c("", "NA", ".", " ", "NaN", 'Inf', '-Inf'),
-                             skip = 3,
-                             col_names = T,
-                             col_types = cols(.default = col_double(),
-                                              Date = col_date(format = "%m/%d/%Y")))
-
-df_bond <- df_bond %>%
-  dplyr::mutate('Year' = lubridate::year(Date)) %>%
-  dplyr::mutate('Canada_lag' = dplyr::lag(Canada)) %>% #include one-day lags
-  dplyr::mutate('US_lag' = dplyr::lag(US)) %>% #include one-day lags
-  dplyr::select(-Date_Number) %>%
-  dplyr::select(Date, Year, everything())
+# df_bond <- readr::read_csv('FTS_Data_Bond.csv',
+#                              na = c("", "NA", ".", " ", "NaN", 'Inf', '-Inf'),
+#                              skip = 3,
+#                              col_names = T,
+#                              col_types = cols(.default = col_double(),
+#                                               Date = col_date(format = "%m/%d/%Y")))
+# 
+# df_bond <- df_bond %>%
+#   dplyr::mutate('Year' = lubridate::year(Date)) %>%
+#   dplyr::mutate('Canada_lag' = dplyr::lag(Canada)) %>% #include one-day lags
+#   dplyr::mutate('US_lag' = dplyr::lag(US)) %>% #include one-day lags
+#   dplyr::select(-Date_Number) %>%
+#   dplyr::select(Date, Year, everything())
 
 ###########################################
 ### The new dataset---updated till 2018 ###
 ###########################################
 
-# df_bond <- readr::read_csv('CGR_bond_2019.csv',
-#                              na = c("", "NA", ".", " ", "NaN", 'Inf', '-Inf'),
-#                              col_names = T,
-#                              col_types = cols(.default = col_double(),
-#                                               Date = col_date(format = "%d/%m/%Y")))
-# 
-# df_bond <- df_bond %>%
-#   dplyr::mutate('Year' = lubridate::year(Date)) %>%
-#   dplyr::filter(Year < 2019) %>%
-#   dplyr::mutate('Canada_lag' = dplyr::lag(Canada)) %>% #include one-day lags
-#   dplyr::mutate('US_lag' = dplyr::lag(US)) %>% #include one-day lags
-#   dplyr::select(Date, Year, everything())
+df_bond <- readr::read_csv('CGR_data_2018_bond.csv',
+                             na = c("", "NA", ".", " ", "NaN", 'Inf', '-Inf'),
+                             col_names = T,
+                             col_types = cols(.default = col_double(),
+                                              Date = col_date(format = "%d/%m/%Y")))
+
+df_bond <- df_bond %>%
+  dplyr::mutate('Year' = lubridate::year(Date)) %>%
+  dplyr::filter(Year < 2019) %>%
+  dplyr::mutate('Canada_lag' = dplyr::lag(Canada)) %>% #include one-day lags
+  dplyr::mutate('US_lag' = dplyr::lag(US)) %>% #include one-day lags
+  dplyr::select(Date, Year, everything())
 
 ### Analysis begins here ###
 
@@ -149,6 +149,9 @@ nest_year_return_LHS_RHS <- nest_year_return %>%
   dplyr::select(-data)
 
 
+nest_year_return_LHS_RHS <- nest_year_return_LHS_RHS %>%
+  dplyr::mutate('RHS_country_rm_NA_col' = purrr::map(RHS_country, func_rm_full_NA))
+
 func_NA_med_df <- function(df)
 {
   # This function accepts a dataframe and
@@ -165,7 +168,7 @@ func_NA_med_df <- function(df)
 
 
 nest_year_return_LHS_RHS <- nest_year_return_LHS_RHS %>%
-  dplyr::mutate('RHS_country_clean' = purrr::map(RHS_country, func_NA_med_df), 
+  dplyr::mutate('RHS_country_clean' = purrr::map(RHS_country_rm_NA_col, func_NA_med_df), 
                 'Cov_matrix' = purrr::map(RHS_country_clean, cov),
                 'Eig_val' = purrr::map(Cov_matrix, function(df){return(eigen(df)$values)}),
                 'Eig_vec' = purrr::map(Cov_matrix, function(df){return(eigen(df)$vectors)}),
@@ -195,13 +198,47 @@ num_pc_bond <- max(num_pc_90) # At John's suggestion
 ### PC computation for ordinary countries ###
 #############################################
 
+func_pc_out_sample <- function(df1, df2)
+{
+  # This function accepts 2 dataframes, compares their
+  # columns and rows to see if they can be multiplied,
+  # then finds submatrices compatible with multiplication,
+  # and multiplies the two matrices
+  
+  data_matrix <- as.matrix(df1)
+  ncol_data <- ncol(data_matrix) #column number in data
+  nrow_eig <- nrow(df2) #row number in eigenmatrix
+  
+  if (ncol_data < nrow_eig) #if num of row is more
+  {
+    eig_mat <- df2[1:ncol_data, ] #select submatrix
+    temp <- data_matrix%*%eig_mat #multiply
+  } else 
+  {
+    data_mat <- data_matrix[, 1:nrow_eig] #select submatrix
+    temp <- data_mat%*%df2 #multiply
+  }
+  
+  pc_out_sample <- temp
+  
+  return(pc_out_sample)
+}
+
 # Compute PCs
+# nest_year_return_LHS_RHS <- nest_year_return_LHS_RHS %>%
+#   dplyr::filter(Year >= year_cohort + 1) %>%
+#   dplyr::mutate('PC_out_sample' = purrr::map2(RHS_country_clean, Lag_eig_vec,
+#                                               function(df1, df2){return(df1%*%df2)}), #note df1%*%df2 [!]
+#                 'PC_out_sample_90' = purrr::map(PC_out_sample,
+#                                                 function(df){return(df[, 1:num_pc_bond])}))
+
 nest_year_return_LHS_RHS <- nest_year_return_LHS_RHS %>%
-  dplyr::filter(Year >= year_cohort + 1) %>%
+  dplyr::filter(!(purrr::map_lgl(Lag_eig_vec, function(df){return(any(is.na(df)))}))) %>%
   dplyr::mutate('PC_out_sample' = purrr::map2(RHS_country_clean, Lag_eig_vec,
-                                              function(df1, df2){return(df1%*%df2)}), #note df1%*%df2 [!]
+                                              func_pc_out_sample),
                 'PC_out_sample_90' = purrr::map(PC_out_sample,
-                                                function(df){return(df[, 1:num_pc_bond])}))
+                                                function(df){return(df[, 1:num_pc_bond])})
+                )
 
 
 nest_year_regression <- nest_year_return_LHS_RHS %>%
@@ -400,23 +437,23 @@ nest_year_pre_cohort_regress <- rbind(nest_year_pre_cohort_final_3,
                                       nest_year_pre_cohort_final_2) %>%
   dplyr::arrange(Year)
 
-func_select_PC_list <- function(list)
-{
-  # This function accepts a list of PCs matrices and 
-  # returns the list with each PC matrix with 
-  # number of columns from 1 to num_pc_bond
-  func_select_PC_df <- function(df)
-  {
-    return(df[, 1:num_pc_bond])
-  }
-  
-  list1 <- purrr::map(list, func_select_PC_df)
-  
-  return(list1)
-}
-
-nest_year_pre_cohort_regress <- nest_year_pre_cohort_regress %>%
-  dplyr::mutate('PC_list_j_final' = purrr::map(PC_list_j, func_select_PC_list))
+# func_select_PC_list <- function(list)
+# {
+#   # This function accepts a list of PCs matrices and 
+#   # returns the list with each PC matrix with 
+#   # number of columns from 1 to num_pc_bond
+#   func_select_PC_df <- function(df)
+#   {
+#     return(df[, 1:num_pc_bond])
+#   }
+#   
+#   list1 <- purrr::map(list, func_select_PC_df)
+#   
+#   return(list1)
+# }
+# 
+# nest_year_pre_cohort_regress <- nest_year_pre_cohort_regress %>%
+#   dplyr::mutate('PC_list_j_final' = purrr::map(PC_list_j, func_select_PC_list))
 
 
 func_pre_cohort_regress <- function(df1, list)
@@ -442,9 +479,14 @@ func_pre_cohort_regress <- function(df1, list)
 }
 
 
+# nest_year_pre_cohort_regress <- nest_year_pre_cohort_regress %>%
+#   dplyr::filter(purrr::map(PC_list_j_final, length) > 0) %>%
+#   dplyr::mutate('Div_ind_pre_cohort' = purrr::map2(LHS_pre_cohort, PC_list_j_final,
+#                                                    func_pre_cohort_regress))
+
 nest_year_pre_cohort_regress <- nest_year_pre_cohort_regress %>%
-  dplyr::filter(purrr::map(PC_list_j_final, length) > 0) %>%
-  dplyr::mutate('Div_ind_pre_cohort' = purrr::map2(LHS_pre_cohort, PC_list_j_final,
+#  dplyr::filter(purrr::map(PC_list_j_final, length) > 0) %>%
+  dplyr::mutate('Div_ind_pre_cohort' = purrr::map2(LHS_pre_cohort, PC_list_j,
                                                    func_pre_cohort_regress))
 
 
