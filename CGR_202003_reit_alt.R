@@ -4,36 +4,36 @@ library(tidyverse)
 ### The previous dataset---till 2012 ###
 ########################################
 
-df_reit <- readr::read_csv('FTS_Data_REIT.csv',
-                           na = c("", "NA", ".", " ", "NaN", 'Inf', '-Inf'),
-                           skip = 3,
-                           col_names = T,
-                           col_types = cols(.default = col_double(),
-                                            Date = col_date(format = "%m/%d/%Y")))
-
-df_reit <- df_reit %>%
-  dplyr::mutate('Year' = lubridate::year(Date)) %>%
-#  dplyr::mutate('Canada_lag' = dplyr::lag(Canada)) %>% #include one-day lags
-  dplyr::mutate('US_lag' = dplyr::lag(US)) %>% #include one-day lags
-  dplyr::select(-Date_Number) %>%
-  dplyr::select(Date, Year, everything())
+# df_reit <- readr::read_csv('FTS_Data_REIT.csv',
+#                            na = c("", "NA", ".", " ", "NaN", 'Inf', '-Inf'),
+#                            skip = 3,
+#                            col_names = T,
+#                            col_types = cols(.default = col_double(),
+#                                             Date = col_date(format = "%m/%d/%Y")))
+# 
+# df_reit <- df_reit %>%
+#   dplyr::mutate('Year' = lubridate::year(Date)) %>%
+# #  dplyr::mutate('Canada_lag' = dplyr::lag(Canada)) %>% #include one-day lags
+#   dplyr::mutate('US_lag' = dplyr::lag(US)) %>% #include one-day lags
+#   dplyr::select(-Date_Number) %>%
+#   dplyr::select(Date, Year, everything())
 
 ###########################################
 ### The new dataset---updated till 2018 ###
 ###########################################
 
-# df_reit <- readr::read_csv('CGR_reit_2019.csv',
-#                              na = c("", "NA", ".", " ", "NaN", 'Inf', '-Inf'),
-#                              col_names = T,
-#                              col_types = cols(.default = col_double(),
-#                                               Date = col_date(format = "%d/%m/%Y")))
-# 
-# df_reit <- df_reit %>%
-#   dplyr::mutate('Year' = lubridate::year(Date)) %>%
-#   dplyr::filter(Year < 2019) %>%
-#   dplyr::mutate('Canada_lag' = dplyr::lag(Canada)) %>% #include one-day lags
-#   dplyr::mutate('US_lag' = dplyr::lag(US)) %>% #include one-day lags
-#   dplyr::select(Date, Year, everything())
+df_reit <- readr::read_csv('CGR_data_2018_reit.csv',
+                             na = c("", "NA", ".", " ", "NaN", 'Inf', '-Inf'),
+                             col_names = T,
+                             col_types = cols(.default = col_double(),
+                                              Date = col_date(format = "%d/%m/%Y")))
+
+df_reit <- df_reit %>%
+  dplyr::mutate('Year' = lubridate::year(Date)) %>%
+  dplyr::filter(Year < 2019) %>%
+#  dplyr::mutate('Canada_lag' = dplyr::lag(Canada)) %>% #include one-day lags
+  dplyr::mutate('US_lag' = dplyr::lag(US)) %>% #include one-day lags
+  dplyr::select(Date, Year, everything())
 
 ### Analysis begins here ###
 
@@ -425,26 +425,26 @@ nest_year_pre_cohort_regress <- rbind(nest_year_pre_cohort_final_3,
                                       nest_year_pre_cohort_final_2) %>%
   dplyr::arrange(Year)
 
-func_select_PC_list <- function(list)
-{
-  # This function accepts a list of PCs matrices and 
-  # returns the list with each PC matrix with 
-  # number of columns from 1 to num_pc_reit
-  
-  func_select_PC_df <- function(df)
-  {
-    # ncol_min <- min(ncol(df), num_pc_reit)
-    # return(df[, 1:ncol_min])
-    return(df[, 1:num_pc_reit])
-  }
-  
-  list1 <- purrr::map(list, func_select_PC_df)
-  
-  return(list1)
-}
-
-nest_year_pre_cohort_regress <- nest_year_pre_cohort_regress %>%
-  dplyr::mutate('PC_list_j_final' = purrr::map(PC_list_j, func_select_PC_list))
+# func_select_PC_list <- function(list)
+# {
+#   # This function accepts a list of PCs matrices and 
+#   # returns the list with each PC matrix with 
+#   # number of columns from 1 to num_pc_reit
+#   
+#   func_select_PC_df <- function(df)
+#   {
+#     # ncol_min <- min(ncol(df), num_pc_reit)
+#     # return(df[, 1:ncol_min])
+#     return(df[, 1:num_pc_reit])
+#   }
+#   
+#   list1 <- purrr::map(list, func_select_PC_df)
+#   
+#   return(list1)
+# }
+# 
+# nest_year_pre_cohort_regress <- nest_year_pre_cohort_regress %>%
+#   dplyr::mutate('PC_list_j_final' = purrr::map(PC_list_j, func_select_PC_list))
 
 
 func_pre_cohort_regress <- function(df1, list)
@@ -470,10 +470,16 @@ func_pre_cohort_regress <- function(df1, list)
 }
 
 
+# nest_year_pre_cohort_regress <- nest_year_pre_cohort_regress %>%
+#   dplyr::filter(purrr::map(PC_list_j_final, length) > 0) %>%
+#   dplyr::mutate('Div_ind_pre_cohort' = purrr::map2(LHS_pre_cohort, PC_list_j_final,
+#                                                    func_pre_cohort_regress))
+
 nest_year_pre_cohort_regress <- nest_year_pre_cohort_regress %>%
-  dplyr::filter(purrr::map(PC_list_j_final, length) > 0) %>%
-  dplyr::mutate('Div_ind_pre_cohort' = purrr::map2(LHS_pre_cohort, PC_list_j_final,
+  dplyr::filter(purrr::map(PC_list_j, length) > 0) %>%
+  dplyr::mutate('Div_ind_pre_cohort' = purrr::map2(LHS_pre_cohort, PC_list_j,
                                                    func_pre_cohort_regress))
+
 
 
 func_attach_name_pre_cohort <- function(vec, LHS_data)

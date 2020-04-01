@@ -5,7 +5,7 @@ library(lmtest)
 library(sandwich)
 library(plm)
 
-name_script_file <- "CGR_202003_bond_alt.R"
+name_script_file <- "CGR_202003_reit_alt.R"
 source(name_script_file, echo = F) #Compute diversification using original daily index data
 
 summ_stat_div <- apply(Div_ind_full_wide[, - 1], 2, summary) #Compute summary stats
@@ -19,8 +19,13 @@ plot_div <- Div_ind_plot
 #   dplyr::select(-c(`GLOBAL SUPPLY CHAIN`, `GDP PER CAPITA`)) %>%
 #   dplyr::rename('ERM' = `1992 - ERM`, 'EZ' = `2009-10 - EUROZONE`)
 
+Div_ind_full_long <- Div_ind_full_wide %>%
+  tidyr::gather(-c("Year"), key = 'Country', value = 'Div_Index') %>%
+  dplyr::filter(Country %in% name_country_full) %>%
+  dplyr::arrange(Country)
 
-file_RHS_common <- readr::read_csv('Panel_bond_updated_2018.csv')
+
+file_RHS_common <- readr::read_csv('Panel_reit_updated_2018.csv')
 
 RHS_common <- file_RHS_common %>%
   dplyr::select(Year, Country, TED, VIX, SENT, FEDFUNDS, INTERNET, ERM, Euro)
@@ -148,7 +153,8 @@ panel_trend_print <- nest_panel_common %>%
   mutate('Coef_year' = purrr::map(summary_trend_NW, func_trend_print))
 
 print_trend <- panel_trend_print$Coef_year
-names(print_trend) <- name_country_full
+# names(print_trend) <- name_country_full
+names(print_trend) <- panel_trend_print$Country
 
 print_trend_2 <- dplyr::bind_rows(print_trend) %>% t(.)
 
@@ -169,7 +175,9 @@ panel_trend_print_post <- nest_panel_pre_post %>%
   mutate('Coef_year' = purrr::map(Post00_trend, func_trend_print))
 
 print_trend_post <- panel_trend_print_post$Coef_year
-names(print_trend_post) <- name_country_full
+# names(print_trend_post) <- name_country_full
+
+names(print_trend_post) <- panel_trend_print_post$Country
 
 print_trend_post_2 <- dplyr::bind_rows(print_trend_post) %>% t(.)
 
@@ -396,7 +404,7 @@ panel_agg_fin <- readr::read_csv('Panel_risk_financial_updated_2018.csv') %>%
   dplyr::select(Country, Year, Agg_fin_risk)
 
 # Liquidity risk
-panel_liq <- readr::read_csv('Panel_risk_liq_bond_updated_2018.csv') %>%
+panel_liq <- readr::read_csv('Panel_risk_liq_reit_updated_2018.csv') %>%
   dplyr::rename('Country' = country, 'Year' = year, 'Agg_liq_risk' = index)
 
 ## Political risk file read
