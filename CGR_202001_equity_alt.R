@@ -22,7 +22,7 @@ library(tidyverse)
 ### The new dataset---updated till 2018 ###
 ###########################################
 
-df_equity <- readr::read_csv('CGR_equity_2019.csv',
+df_equity <- readr::read_csv('CGR_data_2018_equity.csv',
                              na = c("", "NA", ".", " ", "NaN", 'Inf', '-Inf'),
                              col_names = T,
                              col_types = cols(.default = col_double(),

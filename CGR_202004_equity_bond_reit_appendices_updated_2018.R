@@ -159,3 +159,10 @@ func_data_trend <- function(df, vec)
 nest_div_all <- nest_div_all %>%
   dplyr::mutate('data_trend' = purrr::map2(data, World_mean_all, func_data_trend)) %>%
   mutate('trend_NW' = map(data_trend, func_div_trend_NW))
+
+nest_div_all_trend <- nest_div_all %>%
+  dplyr::select(Country, trend_NW) %>%
+  dplyr::mutate('trend_print' = purrr::map(trend_NW, func_trend_print))
+
+div_all_trend_print <- nest_div_all_trend$trend_print
+names(div_all_trend_print) <- nest_div_all_trend$Country

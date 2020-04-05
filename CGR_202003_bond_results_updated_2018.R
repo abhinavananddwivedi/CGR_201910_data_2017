@@ -212,7 +212,7 @@ panel_common_emerg <- panel_common %>% dplyr::filter(., Country %in% name_countr
 trend_emerg <- func_div_trend_NW(panel_common_emerg, formula = form_trend)
 
 panel_common_emerg_pre <- panel_common_emerg %>% dplyr::filter(., Year < 2000)
-trend_emerg_pre <- func_div_trend_NW(panel_common_emerg_pre, formula = form_trend)
+# trend_emerg_pre <- func_div_trend_NW(panel_common_emerg_pre, formula = form_trend)
 
 panel_common_emerg_post <- panel_common_emerg %>% dplyr::filter(., Year >= 2000)
 trend_emerg_post <- func_div_trend_NW(panel_common_emerg_post, formula = form_trend)
@@ -224,7 +224,7 @@ trend_emerg_post <- func_div_trend_NW(panel_common_emerg_post, formula = form_tr
 trend_dev_emerg_pre_post <- rbind('Developed' = func_trend_print(trend_dev),
                                   'Emerging'  = func_trend_print(trend_emerg),
                                   'Developed Pre 2000' = func_trend_print(trend_dev_pre),
-                                  'Emerging Pre 2000' = func_trend_print(trend_emerg_pre),
+#                                  'Emerging Pre 2000' = func_trend_print(trend_emerg_pre),
                                   'Developed Post 2000' = func_trend_print(trend_dev_post),
                                   'Emerging Post 2000' = func_trend_print(trend_emerg_post))
 

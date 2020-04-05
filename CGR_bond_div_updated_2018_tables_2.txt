@@ -1,0 +1,948 @@
+CGR BONDS RESULTS UPDATED TILL 2018
+
+
+Trends
+
+
+Full
+
+
+              Estimate   Std Error  T Stats   p value
+Australia    -1.25278655 0.2347183 -5.3374038 8.983888e-06
+Austria      -0.69816457 0.2041752 -3.4194392 1.776996e-03
+Belgium      -0.63480021 0.1889553 -3.3595260 2.266846e-03
+Canada       -0.65588917 0.2167826 -3.0255620 4.956403e-03
+China         0.32779323 0.1454093  2.2542799 5.882558e-02
+Czech Rep.   -0.10840507 0.6861403 -0.1579926 8.770901e-01
+Denmark      -0.38637323 0.1599006 -2.4163335 2.244644e-02
+Finland      -2.29345659 0.5996816 -3.8244571 7.377284e-04
+France       -1.13084300 0.2598446 -4.3519966 1.361422e-04
+Germany      -0.36205340 0.1445760 -2.5042429 1.774326e-02
+Greece        4.93973247 0.8698342  5.6789357 2.189480e-05
+Hungary      -1.30368842 0.4904150 -2.6583374 1.600427e-02
+India         0.28110719 0.5635265  0.4988358 6.286848e-01
+Italy        -0.46627934 0.3722595 -1.2525652 2.197311e-01
+Ireland      -0.92278516 0.8204161 -1.1247770 2.709605e-01
+Japan        -0.05177295 0.4772935 -0.1084719 9.171579e-01
+Mexico        2.54157202 1.2308332  2.0649199 7.779802e-02
+Netherlands  -0.29804684 0.0969142 -3.0753681 4.552401e-03
+New Zealand  -1.35783426 0.2094533 -6.4827541 7.170987e-07
+Norway        0.38932060 0.3883957  1.0023814 3.265893e-01
+Poland       -3.02941731 0.6731565 -4.5003163 3.633026e-04
+Portugal      0.74587736 0.6618599  1.1269414 2.709091e-01
+South Africa -0.37693179 0.7024703 -0.5365804 5.985101e-01
+South Korea   0.96406077 0.7198147  1.3393180 2.381213e-01
+Spain        -0.60762427 0.5471929 -1.1104389 2.769744e-01
+Sweden       -0.98928305 0.4345689 -2.2764698 3.066148e-02
+Switzerland   0.39297759 0.2733824  1.4374648 1.606041e-01
+UK           -0.01355754 0.2373869 -0.0571116 9.548228e-01
+US           -0.26427271 0.2471847 -1.0691304 2.932655e-01
+
+
+Pre 2000
+
+
+              Estimate   Std Error  T Stats   p value
+Australia    -0.76167536 0.4607204  -1.65322708 1.241874e-01
+Austria      -1.76851524 0.2884773  -6.13051713 3.598833e-05
+Belgium      -1.68581655 0.4720028  -3.57162378 5.081998e-03
+Canada       -1.42754545 0.6648250  -2.14724994 5.121283e-02
+Denmark      -1.92127429 0.2521745  -7.61882893 1.801052e-05
+Finland      -9.07550265 0.7962766 -11.39742476 3.171610e-06
+France       -0.91859594 0.7920573  -1.15975950 2.670046e-01
+Germany      -0.89738467 0.2872076  -3.12451561 8.057404e-03
+Greece      -22.93922543       NaN          NaN          NaN
+Hungary     -23.91724250       NaN          NaN          NaN
+Ireland      -1.25405317 0.7909999  -1.58540242 1.368900e-01
+Italy        -4.55186724 4.0550871  -1.12250788 2.942033e-01
+Japan         1.24967536 2.2672816   0.55117784 6.368637e-01
+Netherlands   0.06501707 0.3040614   0.21382875 8.345924e-01
+New Zealand  -1.28479286 0.5832684  -2.20274711 5.874172e-02
+Norway        1.24771471 2.2116745   0.56414935 5.930981e-01
+Portugal     -3.69832086 1.3104725  -2.82212775 3.026934e-02
+Spain        -4.36085693 2.1853187  -1.99552443 8.107638e-02
+Sweden        0.17219005 1.8416536   0.09349753 9.273551e-01
+Switzerland  -0.08420433 0.5062075  -0.16634351 8.704459e-01
+UK            0.01572676 0.8393158   0.01873760 9.853350e-01
+US           -1.23875349 0.6231660  -1.98783878 6.831059e-02
+
+
+Post 2000
+
+
+              Estimate   Std Error  T Stats   p value
+Australia     0.2956178 0.6526730  0.4529340 6.566779e-01
+Austria       0.5955831 0.2309646  2.5786775 2.019600e-02
+Belgium       0.3831001 0.1483220  2.5828940 2.002408e-02
+Canada       -0.2878584 0.4549558 -0.6327172 5.358570e-01
+China         0.3277932 0.1454093  2.2542799 5.882558e-02
+Czech Rep.   -0.5295435 0.8541495 -0.6199658 5.479080e-01
+Denmark      -0.1554642 0.2984989 -0.5208200 6.096251e-01
+Finland       0.2926597 0.1071327  2.7317506 1.477785e-02
+France        0.4309827 0.1394976  3.0895344 7.032337e-03
+Germany       0.4732419 0.1845937  2.5636949 2.081839e-02
+Greece        6.0163077 0.7936501  7.5805548 1.107287e-06
+Hungary      -1.2919058 0.5608628 -2.3034256 3.500888e-02
+India         0.2811072 0.5635265  0.4988358 6.286848e-01
+Italy         1.3965576 0.7969883  1.7522937 9.886204e-02
+Ireland       2.3828638 0.6827028  3.4903382 3.024643e-03
+Japan         7.0891236 6.3060692  1.1241747 3.777368e-01
+Mexico        2.5415720 1.2308332  2.0649199 7.779802e-02
+Netherlands   0.2490353 0.1175510  2.1185304 5.013187e-02
+New Zealand  -0.4348226 0.5222357 -0.8326175 4.173159e-01
+Norway        0.6615619 0.6173978  1.0715327 3.008684e-01
+Poland       -3.0294173 0.6731565 -4.5003163 3.633026e-04
+Portugal      3.5004011 0.7589906  4.6119162 2.885983e-04
+South Africa -0.6868561 0.8048285 -0.8534193 4.060224e-01
+South Korea   0.9640608 0.7198147  1.3393180 2.381213e-01
+Spain         2.0740408 0.3798408  5.4602903 5.237404e-05
+Sweden        1.0269158 0.6566795  1.5638005 1.374254e-01
+Switzerland   1.7446525 0.5801880  3.0070466 8.355748e-03
+UK            1.4891085 0.4455559  3.3421361 4.135289e-03
+US           -0.6132009 0.4922504 -1.2457092 2.308049e-01
+
+
+####################################################################
+
+
+TABLE 4
+
+
+                      Estimate Std. Error    t value    Pr(>|t|)
+Developed           -0.4276026  0.1558853 -2.7430592 0.006252682
+Emerging             0.2318873  0.4437727  0.5225362 0.603434357
+Developed Pre 2000  -0.9133038  0.6197349 -1.4737008 0.141966073
+Developed Post 2000  0.6517558  0.3162040  2.0611881 0.039883003
+Emerging Post 2000   0.2318873  0.4437727  0.5225362 0.603434357
+
+
+####################################################################
+
+
+TABLE 7 OLS
+
+
+$Australia
+                Estimate Std. Error    t value    Pr(>|t|)
+(Intercept)  58.98412330 17.2081253  3.4276903 0.002821977
+TED         -19.69002362 13.9033353 -1.4162086 0.172900449
+VIX           0.32448375  0.6353851  0.5106884 0.615451803
+SENT         -2.51548277  5.6584828 -0.4445507 0.661666873
+FEDFUNDS      4.63996550  2.6135794  1.7753298 0.091864861
+INTERNET     -0.04816461  0.3247927 -0.1482934 0.883673754
+EZ          -18.20501353 11.6944671 -1.5567202 0.136037420
+
+$Austria
+               Estimate Std. Error    t value  Pr(>|t|)
+(Intercept) 11.27303399 10.3897525  1.0850147 0.2914910
+TED         -3.14861001  8.3944189 -0.3750837 0.7117524
+VIX         -0.19510853  0.3836265 -0.5085898 0.6168946
+SENT        -2.60862948  3.4164231 -0.7635558 0.4545096
+FEDFUNDS     1.56262518  1.5780013  0.9902560 0.3344933
+INTERNET    -0.08371877  0.1961001 -0.4269185 0.6742373
+EZ           0.90633759  7.0607702  0.1283624 0.8992111
+
+$Belgium
+              Estimate Std. Error     t value   Pr(>|t|)
+(Intercept) 24.4877995 12.5549252  1.95045363 0.06603096
+TED         -0.8098848 10.1437740 -0.07984058 0.93719900
+VIX         -0.4832647  0.4635724 -1.04247941 0.31027323
+SENT        -1.5773844  4.1283886 -0.38208234 0.70664033
+FEDFUNDS     0.2037438  1.9068489  0.10684842 0.91602938
+INTERNET    -0.3175723  0.2369664 -1.34015725 0.19600172
+EZ           5.3838337  8.5321997  0.63100184 0.53555694
+
+$Canada
+               Estimate Std. Error    t value     Pr(>|t|)
+(Intercept)  50.9589117 12.8948940  3.9518674 0.0008552401
+TED         -13.8539670 10.4184524 -1.3297529 0.1993443321
+VIX           0.5696238  0.4761253  1.1963739 0.2462671586
+SENT         -2.1400766  4.2401793 -0.5047137 0.6195634788
+FEDFUNDS      4.3964313  1.9584835  2.2448140 0.0368799673
+INTERNET      0.1747434  0.2433831  0.7179765 0.4815075332
+EZ           11.8888383  8.7632390  1.3566717 0.1907874106
+
+$China
+               Estimate Std. Error    t value  Pr(>|t|)
+(Intercept) 92.92267949 12.1693211  7.6358146 0.0167220
+TED          5.53271579  6.4455188  0.8583818 0.4811314
+VIX          0.16999962  0.2580567  0.6587684 0.5777452
+SENT        10.17990072  7.2330017  1.4074241 0.2945967
+FEDFUNDS    -2.14993804  1.5694648 -1.3698543 0.3042480
+INTERNET     0.05651401  0.2300448  0.2456652 0.8288516
+EZ           1.69287805  3.2868091  0.5150521 0.6577918
+
+$`Czech Rep.`
+               Estimate Std. Error    t value   Pr(>|t|)
+(Intercept) -22.4068458 24.2014361 -0.9258478 0.38533271
+TED         -21.6188812 13.1607763 -1.6426752 0.14445220
+VIX           1.6393643  0.6744626  2.4306229 0.04537904
+SENT        -12.1807067  6.3211243 -1.9269842 0.09534465
+FEDFUNDS      8.8627226  3.8846028  2.2815003 0.05651114
+INTERNET      0.9317376  0.5250399  1.7746035 0.11923167
+EZ           -6.7054023  8.6223282 -0.7776789 0.46222776
+
+$Denmark
+               Estimate Std. Error     t value   Pr(>|t|)
+(Intercept) 19.12685161  9.9666198  1.91909113 0.07012048
+TED          6.09074428  8.0525481  0.75637478 0.45870109
+VIX         -0.13699628  0.3680030 -0.37226949 0.71381208
+SENT        -5.31752260  3.2772859 -1.62253850 0.12116414
+FEDFUNDS    -0.04161479  1.5137356 -0.02749145 0.97835446
+INTERNET    -0.17468744  0.1881138 -0.92862657 0.36473076
+EZ          -1.96201739  6.7732135 -0.28967304 0.77520382
+
+$Finland
+             Estimate Std. Error    t value    Pr(>|t|)
+(Intercept) 85.164344 22.2228312  3.8322905 0.001220338
+TED         23.892360 17.7590784  1.3453603 0.195213793
+VIX         -2.209723  0.7701228 -2.8693118 0.010198723
+SENT         6.901399  7.9627060  0.8667153 0.397504710
+FEDFUNDS    -6.349945  4.0706907 -1.5599184 0.136188112
+INTERNET    -1.332238  0.4168271 -3.1961413 0.005004759
+EZ          10.998352 13.7490250  0.7999369 0.434178163
+
+$France
+               Estimate Std. Error     t value   Pr(>|t|)
+(Intercept) 33.61187391 13.5964264  2.47211090 0.02305445
+TED          5.96386294 10.9852568  0.54289700 0.59351295
+VIX         -0.79803673  0.5020283 -1.58962491 0.12842112
+SENT         3.53019980  4.4708615  0.78960169 0.43950387
+FEDFUNDS    -0.06051961  2.0650326 -0.02930685 0.97692551
+INTERNET    -0.47641863  0.2566241 -1.85648428 0.07896003
+EZ           3.26636658  9.2399933  0.35350313 0.72760341
+
+$Germany
+               Estimate Std. Error     t value  Pr(>|t|)
+(Intercept)  8.78098318  9.5986347  0.91481585 0.3717529
+TED         -3.84696145  7.7552339 -0.49604712 0.6255506
+VIX          0.12772408  0.3544157  0.36037933 0.7225387
+SENT         0.83169591  3.1562828  0.26350488 0.7949980
+FEDFUNDS     0.01543606  1.4578459  0.01058826 0.9916623
+INTERNET    -0.05273739  0.1811683 -0.29109616 0.7741317
+EZ          -4.44935397  6.5231346 -0.68208832 0.5034142
+
+$Ireland
+                Estimate Std. Error     t value  Pr(>|t|)
+(Intercept)  29.42706896 24.6692480  1.19286445 0.2476066
+TED         -10.35155976 19.9315626 -0.51935516 0.6095106
+VIX           0.00861565  0.9108762  0.00945864 0.9925518
+SENT          4.04833823  8.1118956  0.49906192 0.6234648
+FEDFUNDS     -1.00323402  3.7467788 -0.26775907 0.7917699
+INTERNET     -0.12979778  0.4656167 -0.27876527 0.7834364
+EZ           14.70114749 16.7649704  0.87689672 0.3914956
+
+$Italy
+              Estimate Std. Error    t value    Pr(>|t|)
+(Intercept) 105.728665 34.8978210  3.0296638 0.007204873
+TED          18.052974 27.8881271  0.6473355 0.525585402
+VIX          -2.682156  1.2093693 -2.2178143 0.039672818
+SENT          5.081280 12.5043063  0.4063624 0.689266904
+FEDFUNDS     -6.129492  6.3924454 -0.9588649 0.350330296
+INTERNET     -1.210189  0.6545681 -1.8488352 0.080976051
+EZ            6.765352 21.5909039  0.3133427 0.757622161
+
+$Japan
+               Estimate Std. Error t value Pr(>|t|)
+(Intercept) -73.8665125        NaN     NaN      NaN
+TED           2.9899761        NaN     NaN      NaN
+VIX           5.3582656        NaN     NaN      NaN
+SENT        106.1872891        NaN     NaN      NaN
+FEDFUNDS      3.2710692        NaN     NaN      NaN
+INTERNET      0.7095981        NaN     NaN      NaN
+
+$Mexico
+               Estimate Std. Error    t value  Pr(>|t|)
+(Intercept)  48.4770478 29.4143850  1.6480728 0.3472010
+TED         -72.2246143 58.2791992 -1.2392863 0.4322291
+VIX          -0.6562798  0.7512925 -0.8735343 0.5429075
+SENT        -10.4898819 32.5984064 -0.3217912 0.8018031
+FEDFUNDS     11.1602052  9.5803217  1.1649092 0.4515998
+INTERNET      1.2829574  0.5375740  2.3865690 0.2526028
+EZ           18.6303150 12.2546474  1.5202653 0.3704013
+
+$Netherlands
+              Estimate Std. Error     t value   Pr(>|t|)
+(Intercept) 15.2879190  7.7817844  1.96457756 0.06425957
+TED          0.6033868  6.2873065  0.09596905 0.92455016
+VIX         -0.2592999  0.2873311 -0.90244299 0.37812040
+SENT         0.8284314  2.5588548  0.32375085 0.74966325
+FEDFUNDS    -0.1012185  1.1819017 -0.08564037 0.93264833
+INTERNET    -0.1922078  0.1468764 -1.30863691 0.20626641
+EZ           3.3474529  5.2884217  0.63297769 0.53429327
+
+$`New Zealand`
+                 Estimate Std. Error     t value     Pr(>|t|)
+(Intercept)  64.014516681 14.3453538  4.46238675 0.0003009728
+TED         -17.533030404 11.4638977 -1.52941267 0.1435459853
+VIX          -0.007907671  0.4971322 -0.01590658 0.9874839098
+SENT         -6.261506999  5.1401117 -1.21816556 0.2388881590
+FEDFUNDS      6.553142200  2.6277254  2.49384589 0.0225951133
+INTERNET     -0.087075414  0.2690715 -0.32361435 0.7499597125
+EZ           -6.837236651  8.8753150 -0.77036552 0.4510764772
+
+$Norway
+               Estimate Std. Error    t value  Pr(>|t|)
+(Intercept)  19.3834649 17.8236325  1.0875148 0.2911577
+TED         -11.6889188 14.2435176 -0.8206483 0.4225822
+VIX           0.5542088  0.6176705  0.8972565 0.3814265
+SENT         -7.5519370  6.3864205 -1.1824992 0.2523929
+FEDFUNDS      3.1859660  3.2648628  0.9758346 0.3420797
+INTERNET      0.3972548  0.3343126  1.1882735 0.2501682
+EZ           -9.3202042 11.0272884 -0.8451946 0.4090968
+
+$Poland
+               Estimate Std. Error    t value  Pr(>|t|)
+(Intercept)  51.2600519 34.1957307  1.4990191 0.1647575
+TED         -31.3304380 19.9532727 -1.5701904 0.1474439
+VIX           1.1853038  1.0633257  1.1147138 0.2910459
+SENT         -7.2094074 14.3932006 -0.5008898 0.6272892
+FEDFUNDS      7.3211716  5.7233740  1.2791706 0.2297212
+INTERNET     -0.5260349  0.5846669 -0.8997173 0.3894226
+EZ          -19.9133254 13.1597308 -1.5132016 0.1611722
+
+$Portugal
+                Estimate Std. Error     t value   Pr(>|t|)
+(Intercept)  60.30330338 32.8778379  1.83416268 0.08321629
+TED           5.05114505 26.2738846  0.19224965 0.84969895
+VIX          -1.09951346  1.1393676 -0.96502081 0.34732162
+SENT          8.29662906 11.7805222  0.70426666 0.49027878
+FEDFUNDS     -5.76225157  6.0224328 -0.95679798 0.35134454
+INTERNET     -0.03209809  0.6166799 -0.05204984 0.95906227
+EZ          -11.44115437 20.3411622 -0.56246316 0.58073864
+
+$`South Africa`
+               Estimate Std. Error   t value   Pr(>|t|)
+(Intercept)  33.2790033 33.1415438  1.004148 0.33688533
+TED         -44.7759834 19.0900591 -2.345513 0.03879320
+VIX           1.3611746  1.0098348  1.347918 0.20478812
+SENT        -20.0004961  9.5172531 -2.101499 0.05944585
+FEDFUNDS     11.7758104  5.4553079  2.158597 0.05383562
+INTERNET      0.6922318  0.5691212  1.216317 0.24932002
+EZ          -20.9566923 12.7781805 -1.640037 0.12925330
+
+$Spain
+              Estimate Std. Error    t value    Pr(>|t|)
+(Intercept) 78.9474225 25.0667547  3.1494872 0.005544568
+TED         12.9179608 20.0317619  0.6448739 0.527143274
+VIX         -1.9264177  0.8686778 -2.2176434 0.039686367
+SENT         5.0291877  8.9817177  0.5599361 0.582425066
+FEDFUNDS    -5.5398383  4.5916294 -1.2065082 0.243240042
+INTERNET    -0.7171481  0.4701697 -1.5252964 0.144563705
+EZ           2.0884416 15.5085297  0.1346641 0.894371859
+
+$Sweden
+              Estimate Std. Error     t value   Pr(>|t|)
+(Intercept) 69.0370767 25.1617835  2.74372747 0.01290928
+TED          0.7208086 20.3295075  0.03545627 0.97208577
+VIX         -1.0346019  0.9290624 -1.11359795 0.27934185
+SENT        -4.4116865  8.2738542 -0.53320815 0.60007177
+FEDFUNDS     1.9260764  3.8215854  0.50399931 0.62005598
+INTERNET    -0.5824167  0.4749130 -1.22636498 0.23504346
+EZ           6.2744340 17.0996925  0.36693256 0.71772415
+
+$Switzerland
+               Estimate Std. Error     t value  Pr(>|t|)
+(Intercept)   5.4735088 24.9743556  0.21916517 0.8288586
+TED         -10.3898210 20.1780747 -0.51490646 0.6125568
+VIX           0.5972032  0.9221419  0.64762619 0.5249757
+SENT          0.5395311  8.2122230  0.06569854 0.9483042
+FEDFUNDS      3.0773908  3.7931187  0.81130886 0.4272354
+INTERNET      0.6636003  0.4713755  1.40779561 0.1753429
+EZ           -1.3059738 16.9723184 -0.07694729 0.9394700
+
+$UK
+              Estimate Std. Error    t value   Pr(>|t|)
+(Intercept) -2.1765558 16.7416742 -0.1300083 0.89792644
+TED         -6.2288250 13.5264653 -0.4604917 0.65039016
+VIX          1.4733953  0.6181620  2.3835098 0.02773925
+SENT         3.3025859  5.5051015  0.5999137 0.55565168
+FEDFUNDS     3.3623475  2.5427346  1.3223352 0.20175477
+INTERNET     0.6614026  0.3159887  2.0931210 0.04999042
+EZ           2.6133185 11.3774717  0.2296924 0.82078545
+
+$US
+               Estimate Std. Error     t value     Pr(>|t|)
+(Intercept) 54.78474089 13.1912968  4.15309743 0.0005401393
+TED         12.96203698 10.6579316  1.21618692 0.2388078120
+VIX          0.37932531  0.4870695  0.77879093 0.4456946367
+SENT        -1.23636282  4.3376443 -0.28503094 0.7787041642
+FEDFUNDS     0.50179289  2.0035013  0.25045797 0.8049215243
+INTERNET     0.01116456  0.2489775  0.04484163 0.9647014783
+EZ          15.66223729  8.9646713  1.74710669 0.0967638050
+
+
+#################################################################
+
+
+TABLE 8 Panel estimation
+
+
+Full
+
+
+Oneway (individual) effect Within Model
+
+Call:
+plm::plm(formula = formula, data = panel_data, effect = "individual", 
+    model = mdl, type = "HC0")
+
+Unbalanced Panel: n = 25, T = 6-26, N = 560
+
+Residuals:
+    Min.  1st Qu.   Median  3rd Qu.     Max. 
+-30.5271  -9.1767  -1.1594   8.0744  62.0463 
+
+Coefficients:
+         Estimate Std. Error t value Pr(>|t|)
+TED      -3.50708    5.54574 -0.6324   0.5274
+VIX      -0.21727    0.42445 -0.5119   0.6090
+SENT     -0.84863    2.58202 -0.3287   0.7425
+FEDFUNDS  0.78996    1.86449  0.4237   0.6720
+INTERNET -0.16410    0.24423 -0.6719   0.5019
+EZ       -0.84279    3.39592 -0.2482   0.8041
+
+Total Sum of Squares:    132740
+Residual Sum of Squares: 124630
+R-Squared:      0.061061
+Adj. R-Squared: 0.0078132
+F-statistic: 5.73367 on 6 and 529 DF, p-value: 8.5708e-06
+
+
+Pre 2000
+
+
+Oneway (individual) effect Within Model
+
+Call:
+plm::plm(formula = formula, data = panel_data, effect = "individual", 
+    model = mdl, type = "HC0")
+
+Unbalanced Panel: n = 20, T = 2-8, N = 148
+
+Residuals:
+      Min.    1st Qu.     Median    3rd Qu.       Max. 
+-40.147467  -7.468615   0.052229   8.858918  30.902116 
+
+Coefficients:
+          Estimate Std. Error t value Pr(>|t|)  
+TED      -22.17822   28.78141 -0.7706  0.44244  
+VIX        0.63038    0.41394  1.5229  0.13036  
+SENT       4.32617    4.57886  0.9448  0.34661  
+FEDFUNDS   1.13188    1.69893  0.6662  0.50651  
+INTERNET  -3.59810    1.45798 -2.4679  0.01497 *
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Total Sum of Squares:    26858
+Residual Sum of Squares: 21509
+R-Squared:      0.19917
+Adj. R-Squared: 0.042915
+F-statistic: 6.11826 on 5 and 123 DF, p-value: 4.2699e-05
+
+
+Post 2000
+
+
+Oneway (individual) effect Within Model
+
+Call:
+plm::plm(formula = formula, data = panel_data, effect = "individual", 
+    model = mdl, type = "HC0")
+
+Unbalanced Panel: n = 25, T = 4-18, N = 412
+
+Residuals:
+    Min.  1st Qu.   Median  3rd Qu.     Max. 
+-34.6363  -7.5002  -1.0835   6.3944  60.8688 
+
+Coefficients:
+          Estimate Std. Error t value  Pr(>|t|)    
+TED      -12.84378    2.42997 -5.2856 2.115e-07 ***
+VIX        0.93498    0.12199  7.6643 1.507e-13 ***
+SENT       0.98211    2.03067  0.4836  0.628920    
+FEDFUNDS   2.00135    1.33985  1.4937  0.136079    
+INTERNET   0.52925    0.12752  4.1502 4.101e-05 ***
+EZ        -5.87783    2.21561 -2.6529  0.008314 ** 
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Total Sum of Squares:    67032
+Residual Sum of Squares: 60100
+R-Squared:      0.10341
+Adj. R-Squared: 0.032812
+F-statistic: 7.32386 on 6 and 381 DF, p-value: 2.0097e-07
+
+
+Developed
+
+
+Oneway (individual) effect Within Model
+
+Call:
+plm::plm(formula = formula, data = panel_data, effect = "individual", 
+    model = mdl, type = "HC0")
+
+Unbalanced Panel: n = 22, T = 6-26, N = 525
+
+Residuals:
+    Min.  1st Qu.   Median  3rd Qu.     Max. 
+-30.6751  -9.4255  -1.3856   8.3086  62.2624 
+
+Coefficients:
+         Estimate Std. Error t value Pr(>|t|)
+TED      -2.54313    5.94533 -0.4278   0.6690
+VIX      -0.23098    0.44693 -0.5168   0.6055
+SENT     -0.44284    2.71058 -0.1634   0.8703
+FEDFUNDS  0.59683    1.91318  0.3120   0.7552
+INTERNET -0.18087    0.24732 -0.7313   0.4649
+EZ       -0.41525    4.03065 -0.1030   0.9180
+
+Total Sum of Squares:    127690
+Residual Sum of Squares: 119900
+R-Squared:      0.061012
+Adj. R-Squared: 0.010001
+F-statistic: 5.3822 on 6 and 497 DF, p-value: 2.1142e-05
+
+
+Developed pre 2000
+
+
+Oneway (individual) effect Within Model
+
+Call:
+plm::plm(formula = formula, data = panel_data, effect = "individual", 
+    model = mdl, type = "HC0")
+
+Unbalanced Panel: n = 20, T = 2-8, N = 148
+
+Residuals:
+      Min.    1st Qu.     Median    3rd Qu.       Max. 
+-40.147467  -7.468615   0.052229   8.858918  30.902116 
+
+Coefficients:
+          Estimate Std. Error t value Pr(>|t|)  
+TED      -22.17822   28.78141 -0.7706  0.44244  
+VIX        0.63038    0.41394  1.5229  0.13036  
+SENT       4.32617    4.57886  0.9448  0.34661  
+FEDFUNDS   1.13188    1.69893  0.6662  0.50651  
+INTERNET  -3.59810    1.45798 -2.4679  0.01497 *
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Total Sum of Squares:    26858
+Residual Sum of Squares: 21509
+R-Squared:      0.19917
+Adj. R-Squared: 0.042915
+F-statistic: 6.11826 on 5 and 123 DF, p-value: 4.2699e-05
+
+
+Developed post 2000
+
+
+Oneway (individual) effect Within Model
+
+Call:
+plm::plm(formula = formula, data = panel_data, effect = "individual", 
+    model = mdl, type = "HC0")
+
+Unbalanced Panel: n = 22, T = 4-18, N = 377
+
+Residuals:
+    Min.  1st Qu.   Median  3rd Qu.     Max. 
+-34.4708  -7.3733  -1.4603   5.9995  60.5623 
+
+Coefficients:
+          Estimate Std. Error t value  Pr(>|t|)    
+TED      -11.54462    3.03026 -3.8098 0.0001643 ***
+VIX        0.94647    0.20130  4.7019 3.718e-06 ***
+SENT       2.16297    2.11613  1.0221 0.3074247    
+FEDFUNDS   1.44182    1.49339  0.9655 0.3349771    
+INTERNET   0.51912    0.15154  3.4257 0.0006863 ***
+EZ        -5.83045    2.80256 -2.0804 0.0382179 *  
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Total Sum of Squares:    61982
+Residual Sum of Squares: 54717
+R-Squared:      0.11722
+Adj. R-Squared: 0.048926
+F-statistic: 7.72373 on 6 and 349 DF, p-value: 8.2491e-08
+
+
+Emerging
+
+
+Oneway (individual) effect Within Model
+
+Call:
+plm::plm(formula = formula, data = panel_data, effect = "individual", 
+    model = mdl, type = "HC0")
+
+Unbalanced Panel: n = 3, T = 8-18, N = 35
+
+Residuals:
+    Min.  1st Qu.   Median  3rd Qu.     Max. 
+-26.2407  -6.2099   1.1919   8.3801  21.3125 
+
+Coefficients:
+          Estimate Std. Error t value  Pr(>|t|)    
+TED      -35.83624   10.39645 -3.4470 0.0019403 ** 
+VIX        0.79923    0.66685  1.1985 0.2415273    
+SENT     -18.75137    3.05253 -6.1429 1.705e-06 ***
+FEDFUNDS  10.22035    2.61621  3.9065 0.0005963 ***
+INTERNET   0.54436    0.20201  2.6947 0.0121801 *  
+EZ        -9.55543    7.75673 -1.2319 0.2290162    
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Total Sum of Squares:    5049.3
+Residual Sum of Squares: 3534.4
+R-Squared:      0.30002
+Adj. R-Squared: 0.084635
+F-statistic: 1.85728 on 6 and 26 DF, p-value: 0.1268
+
+
+Emerging post 2000
+
+
+Oneway (individual) effect Within Model
+
+Call:
+plm::plm(formula = formula, data = panel_data, effect = "individual", 
+    model = mdl, type = "HC0")
+
+Unbalanced Panel: n = 3, T = 8-18, N = 35
+
+Residuals:
+    Min.  1st Qu.   Median  3rd Qu.     Max. 
+-26.2407  -6.2099   1.1919   8.3801  21.3125 
+
+Coefficients:
+          Estimate Std. Error t value  Pr(>|t|)    
+TED      -35.83624   10.39645 -3.4470 0.0019403 ** 
+VIX        0.79923    0.66685  1.1985 0.2415273    
+SENT     -18.75137    3.05253 -6.1429 1.705e-06 ***
+FEDFUNDS  10.22035    2.61621  3.9065 0.0005963 ***
+INTERNET   0.54436    0.20201  2.6947 0.0121801 *  
+EZ        -9.55543    7.75673 -1.2319 0.2290162    
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Total Sum of Squares:    5049.3
+Residual Sum of Squares: 3534.4
+R-Squared:      0.30002
+Adj. R-Squared: 0.084635
+F-statistic: 1.85728 on 6 and 26 DF, p-value: 0.1268
+
+
+###########################################################################
+
+
+TABLE 8
+
+
+With country internet
+
+
+Oneway (individual) effect Within Model
+
+Call:
+plm::plm(formula = formula, data = panel_data, effect = "individual", 
+    model = mdl, type = "HC0")
+
+Unbalanced Panel: n = 22, T = 6-28, N = 520
+
+Residuals:
+    Min.  1st Qu.   Median  3rd Qu.     Max. 
+-34.3889  -9.3636  -1.2525   7.1784  61.8881 
+
+Coefficients:
+                  Estimate Std. Error t value  Pr(>|t|)    
+TED              -0.160420   4.427156 -0.0362 0.9711094    
+VIX              -0.354424   0.270164 -1.3119 0.1901723    
+SENT              0.351464   2.118593  0.1659 0.8683077    
+FEDFUNDS         -1.104601   1.115631 -0.9901 0.3226063    
+ERM               0.950717         NA      NA        NA    
+EZ               -1.261604   3.404526 -0.3706 0.7111200    
+Country_internet -0.233722   0.069902 -3.3436 0.0008903 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Total Sum of Squares:    133880
+Residual Sum of Squares: 112370
+R-Squared:      0.16069
+Adj. R-Squared: 0.11282
+F-statistic: 13.4288 on 7 and 491 DF, p-value: 6.6495e-16
+
+
+With developmental PC1
+
+
+Oneway (individual) effect Within Model
+
+Call:
+plm::plm(formula = formula, data = panel_data, effect = "individual", 
+    model = mdl, type = "HC0")
+
+Unbalanced Panel: n = 24, T = 6-28, N = 580
+
+Residuals:
+    Min.  1st Qu.   Median  3rd Qu.     Max. 
+-37.0127  -9.6348  -1.5297   8.7502  64.0249 
+
+Coefficients:
+          Estimate Std. Error t value  Pr(>|t|)    
+TED       3.934042   5.147076  0.7643    0.4450    
+VIX      -0.274582   0.256845 -1.0691    0.2855    
+SENT      1.315991   2.286464  0.5756    0.5652    
+FEDFUNDS -2.081756   1.341419 -1.5519    0.1213    
+ERM      -1.731038         NA      NA        NA    
+EZ        0.206386   3.514115  0.0587    0.9532    
+PC1      -0.166525   0.040916 -4.0700 5.392e-05 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Total Sum of Squares:    144970
+Residual Sum of Squares: 119120
+R-Squared:      0.17833
+Adj. R-Squared: 0.13343
+F-statistic: 17.0213 on 7 and 549 DF, p-value: < 2.22e-16
+
+
+##########################################################################
+
+
+TABLE 9
+
+
+With aggregate risks
+
+
+> panel_est_common_idio
+Oneway (individual) effect Within Model
+
+Call:
+plm::plm(formula = formula, data = panel_data, effect = "individual", 
+    model = mdl, type = "HC0")
+
+Unbalanced Panel: n = 20, T = 6-29, N = 520
+
+Residuals:
+    Min.  1st Qu.   Median  3rd Qu.     Max. 
+-50.0724  -8.1754  -1.0975   7.4717  61.0742 
+
+Coefficients:
+              Estimate Std. Error t value  Pr(>|t|)    
+TED           -6.65753    3.11720 -2.1357 0.0331958 *  
+VIX            0.30771    0.19927  1.5442 0.1231818    
+SENT           1.84425    1.60672  1.1478 0.2515967    
+FEDFUNDS       0.43267    0.65829  0.6573 0.5113204    
+ERM           -1.25827    0.33913 -3.7103 0.0002307 ***
+EZ            -9.90057    2.64951 -3.7368 0.0002084 ***
+Agg_econ_risk -1.19879    0.30715 -3.9029 0.0001083 ***
+Agg_fin_risk   0.56787    0.54057  1.0505 0.2940079    
+Agg_pol_risk  -0.41791    0.46510 -0.8985 0.3693383    
+Agg_liq_risk  18.35578   14.33295  1.2807 0.2009152    
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Total Sum of Squares:    131610
+Residual Sum of Squares: 97323
+R-Squared:      0.26054
+Adj. R-Squared: 0.21677
+F-statistic: 17.2643 on 10 and 490 DF, p-value: < 2.22e-16
+
+
+With aggregate risks and country internet
+
+
+Oneway (individual) effect Within Model
+
+Call:
+plm::plm(formula = formula, data = panel_data, effect = "individual", 
+    model = mdl, type = "HC0")
+
+Unbalanced Panel: n = 20, T = 6-28, N = 499
+
+Residuals:
+    Min.  1st Qu.   Median  3rd Qu.     Max. 
+-47.1218  -8.0389  -1.3748   7.5039  61.9037 
+
+Coefficients:
+                   Estimate Std. Error t value Pr(>|t|)    
+TED               -7.265630   3.397699 -2.1384 0.033002 *  
+VIX                0.401737   0.204494  1.9645 0.050059 .  
+SENT               2.531682   1.681794  1.5053 0.132910    
+FEDFUNDS           0.785313   0.705177  1.1136 0.266006    
+ERM               -1.036917   1.725040 -0.6011 0.548066    
+EZ               -11.018145   2.937168 -3.7513 0.000198 ***
+Agg_econ_risk     -1.477422   0.450895 -3.2766 0.001129 ** 
+Agg_fin_risk       0.687970   0.533431  1.2897 0.197789    
+Agg_pol_risk      -0.323817   0.462072 -0.7008 0.483780    
+Agg_liq_risk      20.809994  13.126211  1.5854 0.113556    
+Country_internet   0.054552   0.070259  0.7764 0.437880    
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Total Sum of Squares:    127470
+Residual Sum of Squares: 92056
+R-Squared:      0.27779
+Adj. R-Squared: 0.2315
+F-statistic: 16.365 on 11 and 468 DF, p-value: < 2.22e-16
+
+
+With aggregate risks and developmental pc
+
+
+Oneway (individual) effect Within Model
+
+Call:
+plm::plm(formula = formula, data = panel_data, effect = "individual", 
+    model = mdl, type = "HC0")
+
+Unbalanced Panel: n = 20, T = 6-28, N = 502
+
+Residuals:
+    Min.  1st Qu.   Median  3rd Qu.     Max. 
+-46.8454  -8.5220  -1.0679   7.3829  63.1969 
+
+Coefficients:
+               Estimate Std. Error t value Pr(>|t|)   
+TED           -1.533303   4.404729 -0.3481 0.727918   
+VIX            0.141958   0.263699  0.5383 0.590602   
+SENT           2.872603   1.689882  1.6999 0.089813 . 
+FEDFUNDS      -1.196387   1.019649 -1.1733 0.241255   
+ERM           -4.264181   1.437848 -2.9657 0.003174 **
+EZ            -6.412882   3.401562 -1.8853 0.060008 . 
+Agg_econ_risk -0.768229   0.364215 -2.1093 0.035448 * 
+Agg_fin_risk   0.442002   0.554820  0.7967 0.426051   
+Agg_pol_risk  -0.526284   0.457703 -1.1498 0.250795   
+Agg_liq_risk  11.439176  14.268357  0.8017 0.423121   
+PC1           -0.091089   0.044166 -2.0624 0.039714 * 
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Total Sum of Squares:    128680
+Residual Sum of Squares: 91141
+R-Squared:      0.29172
+Adj. R-Squared: 0.24661
+F-statistic: 17.636 on 11 and 471 DF, p-value: < 2.22e-16
+
+
+###########################################################################
+
+
+TABLE 10
+
+
+With aggregate risks and country internet: Developed
+
+
+Oneway (individual) effect Within Model
+
+Call:
+plm::plm(formula = formula, data = panel_data, effect = "individual", 
+    model = mdl, type = "HC0")
+
+Unbalanced Panel: n = 19, T = 6-28, N = 482
+
+Residuals:
+    Min.  1st Qu.   Median  3rd Qu.     Max. 
+-44.1668  -8.0901  -1.5699   7.3265  61.7082 
+
+Coefficients:
+                   Estimate Std. Error t value Pr(>|t|)   
+TED               -6.461404   4.076509 -1.5850 0.113658   
+VIX                0.388782   0.241719  1.6084 0.108445   
+SENT               2.761528   1.797439  1.5364 0.125148   
+FEDFUNDS           0.653653   0.734964  0.8894 0.374278   
+ERM               -1.340961   1.690132 -0.7934 0.427958   
+EZ               -10.782191   3.852702 -2.7986 0.005352 **
+Agg_econ_risk     -1.551955   0.482302 -3.2178 0.001385 **
+Agg_fin_risk       0.746996   0.535047  1.3961 0.163360   
+Agg_pol_risk      -0.291800   0.451010 -0.6470 0.517965   
+Agg_liq_risk      20.881070  13.289231  1.5713 0.116818   
+Country_internet   0.060069   0.080340  0.7477 0.455042   
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Total Sum of Squares:    123550
+Residual Sum of Squares: 88296
+R-Squared:      0.28535
+Adj. R-Squared: 0.2395
+F-statistic: 16.4069 on 11 and 452 DF, p-value: < 2.22e-16
+
+
+With aggregate risks and country internet: Developed pre 2000
+
+
+Oneway (individual) effect Within Model
+
+Call:
+plm::plm(formula = formula, data = panel_data, effect = "individual", 
+    model = mdl, type = "HC0")
+
+Unbalanced Panel: n = 18, T = 2-10, N = 158
+
+Residuals:
+      Min.    1st Qu.     Median    3rd Qu.       Max. 
+-33.804298  -6.565758   0.094488   6.625971  28.040800 
+
+Coefficients:
+                   Estimate Std. Error t value Pr(>|t|)  
+TED              -70.512595  43.684557 -1.6141  0.10892  
+VIX                0.843692   0.655718  1.2867  0.20050  
+SENT               0.020197   2.883094  0.0070  0.99442  
+FEDFUNDS           4.344142   3.006775  1.4448  0.15092  
+ERM               -3.373714   1.422049 -2.3724  0.01914 *
+Agg_econ_risk     -0.996912   0.759673 -1.3123  0.19173  
+Agg_fin_risk      -0.630373   0.566771 -1.1122  0.26810  
+Agg_pol_risk       0.625855   0.378614  1.6530  0.10074  
+Agg_liq_risk      -0.283838  15.237837 -0.0186  0.98517  
+Country_internet   0.277102   0.230171  1.2039  0.23082  
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Total Sum of Squares:    28820
+Residual Sum of Squares: 21994
+R-Squared:      0.23685
+Adj. R-Squared: 0.078355
+F-statistic: 4.03476 on 10 and 130 DF, p-value: 7.8116e-05
+
+
+With aggregate risks and country internet: Developed post 2000
+
+
+Oneway (individual) effect Within Model
+
+Call:
+plm::plm(formula = formula, data = panel_data, effect = "individual", 
+    model = mdl, type = "HC0")
+
+Unbalanced Panel: n = 20, T = 4-18, N = 341
+
+Residuals:
+     Min.   1st Qu.    Median   3rd Qu.      Max. 
+-34.41862  -6.82404  -0.16627   5.35903  57.81659 
+
+Coefficients:
+                  Estimate Std. Error t value  Pr(>|t|)    
+TED              -16.75060    2.42464 -6.9085 2.773e-11 ***
+VIX                0.98700    0.16682  5.9166 8.667e-09 ***
+SENT               0.66268    1.70913  0.3877 0.6984798    
+FEDFUNDS           2.35113    0.92283  2.5477 0.0113232 *  
+EZ               -10.44276    2.91483 -3.5826 0.0003947 ***
+Agg_econ_risk     -0.57288    0.44143 -1.2978 0.1953273    
+Agg_fin_risk      -0.14769    0.49777 -0.2967 0.7668895    
+Agg_pol_risk      -2.01799    0.71063 -2.8397 0.0048131 ** 
+Agg_liq_risk      30.80607   13.97887  2.2038 0.0282738 *  
+Country_internet   0.17999    0.11547  1.5587 0.1200772    
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Total Sum of Squares:    57416
+Residual Sum of Squares: 39167
+R-Squared:      0.31783
+Adj. R-Squared: 0.25422
+F-statistic: 14.4901 on 10 and 311 DF, p-value: < 2.22e-16
