@@ -135,7 +135,8 @@ Div_ind_full_long_all <- Div_ind_full_long_equity %>%
 
 nest_div_all <- Div_ind_full_long_all %>%
   dplyr::group_by(Country) %>%
-  tidyr::nest()
+  tidyr::nest() %>%
+  dplyr::arrange(Country)
 
 func_rowmean <- function(df)
 {
@@ -166,3 +167,59 @@ nest_div_all_trend <- nest_div_all %>%
 
 div_all_trend_print <- nest_div_all_trend$trend_print
 names(div_all_trend_print) <- nest_div_all_trend$Country
+
+###############################################################
+################### PRINT TABLE 3 #############################
+###############################################################
+
+# Pre and post 2000
+
+nest_div_all_pre_post <- nest_div_all %>%
+  dplyr::select(Country, data) %>%
+  dplyr::mutate('data_pre' = purrr::map(data, func_pre00),
+                'data_post' = purrr::map(data, func_post00),
+                'world_mean_pre' = purrr::map(data_pre, func_rowmean),
+                'world_mean_post' = purrr::map(data_post, func_rowmean),
+                'data_trend_pre' = purrr::map2(data_pre, world_mean_pre, func_data_trend),
+                'data_trend_post' = purrr::map2(data_post, world_mean_post, func_data_trend)) %>%
+  dplyr::select(-data)
+
+
+func_missing <- function(df)
+{
+  div_vec <- df$Div_Index
+  sum_missing <- sum(is.na(div_vec) | is.nan(div_vec) | is.infinite(div_vec))
+  
+  return(sum_missing/length(div_vec))
+}
+
+nest_div_all_trend_pre_post <- nest_div_all_pre_post %>%
+  dplyr::select(Country, data_trend_pre, data_trend_post) %>%
+  dplyr::mutate('div_frac_NA_pre' = map_dbl(data_trend_pre, func_missing),
+                'div_frac_NA_post' = map_dbl(data_trend_post, func_missing)) %>%
+  dplyr::filter(div_frac_NA_pre < 0.9 & div_frac_NA_post < 0.9) %>%
+  dplyr::mutate('summary_trend_pre' = purrr::map(data_trend_pre, func_div_trend_NW),
+                'summary_trend_post' = purrr::map(data_trend_post, func_div_trend_NW))
+
+print_trend_all_pre_post <- nest_div_all_trend_pre_post %>%
+  dplyr::select(Country, summary_trend_pre, summary_trend_post) %>%
+  dplyr::mutate('print_trend_pre' = purrr::map(summary_trend_pre, func_trend_print),
+                'print_trend_post' = purrr::map(summary_trend_post, func_trend_print))
+
+
+div_all_trend_print_pre <- print_trend_all_pre_post$print_trend_pre
+names(div_all_trend_print_pre) <- print_trend_all_pre_post$Country
+
+div_all_trend_print_post <- print_trend_all_pre_post$print_trend_post
+names(div_all_trend_print_post) <- print_trend_all_pre_post$Country
+
+############## PRINTING OUTPUTS ##########################
+
+# Full
+print_trend_div_all <- dplyr::bind_rows(div_all_trend_print) %>% t(.)
+
+# Pre 2000
+print_trend_div_all_pre <- dplyr::bind_rows(div_all_trend_print_pre) %>% t(.)
+
+# Post 2000
+print_trend_div_all_post <- dplyr::bind_rows(div_all_trend_print_post) %>% t(.)
