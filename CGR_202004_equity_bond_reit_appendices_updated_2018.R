@@ -223,3 +223,106 @@ print_trend_div_all_pre <- dplyr::bind_rows(div_all_trend_print_pre) %>% t(.)
 
 # Post 2000
 print_trend_div_all_post <- dplyr::bind_rows(div_all_trend_print_post) %>% t(.)
+
+##########################################################
+
+########## Figure 4 computation ##########################
+
+
+### Equity
+
+temp_pre_equity <- nest_year_pre_cohort_regress_equity %>%
+  dplyr::select(Year, LHS_pre_cohort)
+temp_ord_equity <- nest_year_regression_equity %>%
+  dplyr::select(Year, LHS_country_ordinary)
+
+nest_year_return_equity <- temp_pre_equity %>%
+  dplyr::full_join(., temp_ord_equity, by = 'Year')
+
+### Compute column-wise volatility
+
+func_vol_df <- function(df)
+{
+  if (is.null(df) == T)
+  {
+    return(0)
+  } else
+  {
+    func_sd_vec <- function(vec)
+    {
+      sd_vec <- sd(vec, na.rm = T)
+      return(sd_vec)
+    }
+    
+    vol_df <- apply(df, 2, func_sd_vec)
+    return(vol_df)
+  }
+}
+
+nest_year_return_equity <- nest_year_return_equity %>%
+  dplyr::mutate('vol_pre_cohort' = purrr::map(LHS_pre_cohort, func_vol_df),
+                'vol_ord' = purrr::map(LHS_country_ordinary, func_vol_df),
+                'vol_mean_pre' = purrr::map_dbl(vol_pre_cohort, func_mean_vec),
+                'vol_mean_ord' = purrr::map_dbl(vol_ord, func_mean_vec))
+
+func_mean_vec_2 <- function(vec_1, vec_2)
+{
+  df <- cbind(vec_1, vec_2)
+  return(apply(df, 1, func_mean_vec))
+}
+
+vol_mean_equity <- nest_year_return_equity %>%
+  dplyr::select(Year, vol_mean_pre, vol_mean_ord) %>%
+  dplyr::mutate('vol_mean_full' = purrr::map2_dbl(vol_mean_pre, vol_mean_ord,
+                                                  func_mean_vec_2))
+
+### Bond
+
+temp_pre_bond <- nest_year_pre_cohort_regress_bond %>%
+  dplyr::select(Year, LHS_pre_cohort)
+temp_ord_bond <- nest_year_regression_bond %>%
+  dplyr::select(Year, LHS_country_ordinary)
+
+nest_year_return_bond <- temp_pre_bond %>%
+  dplyr::full_join(., temp_ord_bond, by = 'Year')
+
+nest_year_return_bond <- nest_year_return_bond %>%
+  dplyr::mutate('vol_pre_cohort' = purrr::map(LHS_pre_cohort, func_vol_df),
+                'vol_ord' = purrr::map(LHS_country_ordinary, func_vol_df),
+                'vol_mean_pre' = purrr::map_dbl(vol_pre_cohort, func_mean_vec),
+                'vol_mean_ord' = purrr::map_dbl(vol_ord, func_mean_vec))
+
+vol_mean_bond <- nest_year_return_bond %>%
+  dplyr::select(Year, vol_mean_pre, vol_mean_ord) %>%
+  dplyr::mutate('vol_mean_full' = purrr::map2_dbl(vol_mean_pre, vol_mean_ord,
+                                                  func_mean_vec_2))
+
+### REIT
+
+temp_pre_reit <- nest_year_pre_cohort_regress_reit %>%
+  dplyr::select(Year, LHS_pre_cohort)
+temp_ord_reit <- nest_year_regression_reit %>%
+  dplyr::select(Year, LHS_country_ordinary)
+
+nest_year_return_reit <- temp_pre_reit %>%
+  dplyr::full_join(., temp_ord_reit, by = 'Year')
+
+nest_year_return_reit <- nest_year_return_reit %>%
+  dplyr::mutate('vol_pre_cohort' = purrr::map(LHS_pre_cohort, func_vol_df),
+                'vol_ord' = purrr::map(LHS_country_ordinary, func_vol_df),
+                'vol_mean_pre' = purrr::map_dbl(vol_pre_cohort, func_mean_vec),
+                'vol_mean_ord' = purrr::map_dbl(vol_ord, func_mean_vec))
+
+vol_mean_reit <- nest_year_return_reit %>%
+  dplyr::select(Year, vol_mean_pre, vol_mean_ord) %>%
+  dplyr::mutate('vol_mean_full' = purrr::map2_dbl(vol_mean_pre, vol_mean_ord,
+                                                  func_mean_vec_2))
+
+###### Data for generating figure 4, 5 ######
+
+vol_mean_all <- tibble::tibble('Year' = vol_mean_equity$Year,
+                               'vol_mean_equity' = vol_mean_equity$vol_mean_full,
+                               'vol_mean_bond' = vol_mean_bond$vol_mean_full,
+                               'vol_mean_reit' = vol_mean_reit$vol_mean_full)
+
+

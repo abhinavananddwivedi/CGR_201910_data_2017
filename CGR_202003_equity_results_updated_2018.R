@@ -405,32 +405,7 @@ panel_agg_pol_risk <- readr::read_csv('Panel_risk_political_updated_2018.csv') %
   dplyr::select(Country, Year, Agg_pol_risk)
 
 
-# func_sum_row <- function(data_frame)
-# {
-#   # This function accepts a panel data frame and
-#   # returns its row sums after ignoring the first
-#   # two columns
-#   
-#   temp_data <- data_frame %>%
-#     dplyr::select(-c(Country, Year)) 
-#   
-#   # Compute row sums
-#   temp_sum <- apply(temp_data, 1, function(vec){return(sum(vec, na.rm = T))})
-#   
-#   temp_temp <- data_frame %>%
-#     tibble::add_column(., 'Agg_pol_risk' = temp_sum) %>%
-#     dplyr::select(Country, Year, Agg_pol_risk)
-#   
-#   return(temp_temp)
-# }
-# 
-# # Aggregating individual political risk variables
-# panel_agg_pol_risk <- func_sum_row(panel_political)
 
-# Developmental indicators
-# panel_dev_indicators <- readr::read_csv('Development_Indicators_201704.csv') %>%
-#   dplyr::rename('Country' = `Country Name`,
-#                 'Country_internet' = `Internet users (per 100 people)`)
 
 dev_ATM <- readr::read_csv('dev_ATM.csv', col_types = cols(.default = col_double()))
 dev_broadband <- readr::read_csv('dev_Broadband.csv', col_types = cols(.default = col_double()))
@@ -655,3 +630,103 @@ panel_est_common_idio_country_internet_pre <- func_panel_est(formula = form_comm
 panel_est_common_idio_country_internet_post <- func_panel_est(formula = form_common_idio_country_internet, 
                                                               panel_data = dplyr::filter(panel_common_idio,
                                                                                          Year >= 2000))
+
+
+##################################################################################
+################# Balanced panel estimations #####################################
+################# Table 5 and 6 in appendices ####################################
+##################################################################################
+
+panel_common_balanced <- plm::make.pbalanced(na.omit(panel_common_2), 
+                                             balance.type = 'shared.individuals')
+
+### Full
+panel_est_full_bal <- func_panel_est(form_common, panel_common_balanced)
+
+# Full country sample, Pre-2000
+panel_est_pre00_bal <- func_panel_est(form_common, dplyr::filter(panel_common_balanced, 
+                                                                 Year < 2000))
+
+# Full country sample, Post-2000
+panel_est_post00_bal <- func_panel_est(form_common, dplyr::filter(panel_common_balanced, 
+                                                                  Year >= 2000))
+
+# Develped country sample, full year sample
+panel_est_dev_bal <- func_panel_est(form_common, dplyr::filter(panel_common_balanced, 
+                                                           Country %in% name_country_developed))
+
+# Emerging country sample, full year sample 
+panel_est_emerg_bal <- func_panel_est(form_common, dplyr::filter(panel_common_balanced, 
+                                                             Country %in% name_country_emerging))
+
+# Developed country sample, Pre 2000
+panel_est_dev_pre_bal <- func_panel_est(form_common, dplyr::filter(panel_common_balanced, 
+                                                               Country %in% name_country_developed &
+                                                                 Year < 2000))
+
+# Emerging country sample, Pre 2000
+panel_est_emerg_pre_bal <- func_panel_est(form_common, dplyr::filter(panel_common_balanced,
+                                                                 Country %in% name_country_emerging &
+                                                                   Year < 2000))
+
+# Developed country sample, Post 2000
+panel_est_dev_post_bal <- func_panel_est(form_common, dplyr::filter(panel_common_balanced,
+                                                                Country %in% name_country_developed &
+                                                                  Year >= 2000))
+
+# Emerging country sample, Post 2000
+panel_est_emerg_post_bal <- func_panel_est(form_common, dplyr::filter(panel_common_balanced,
+                                                                  Country %in% name_country_emerging &
+                                                                    Year >= 2000))
+
+
+##########################
+### Table 6 appendices ###
+##########################
+
+panel_common_idio_balanced <- plm::make.pbalanced(na.omit(panel_common_idio), 
+                                                  balance.type = 'shared.individuals')
+
+### Replacing global internet with country internet 
+panel_est_common_country_internet_bal <- func_panel_est(formula = form_common_country_internet,
+                                                    panel_data = panel_common_idio_balanced)
+
+### Replacing global internet with developmental PC1
+panel_est_common_dev_pc1_bal <- func_panel_est(formula = form_common_dev_pc1, 
+                                           panel_data = panel_common_idio_balanced)
+
+#############################
+### Table 6 appendices ######
+#############################
+
+### With risks only: economic, political, financial, liquidity 
+panel_est_common_idio_bal <- func_panel_est(formula = form_common_idio, 
+                                            panel_data = panel_common_idio_balanced)
+
+### With risks: economic, political, financial, liquidity + Country internet
+panel_est_common_idio_country_internet_bal <- func_panel_est(formula = form_common_idio_country_internet, 
+                                                         panel_data = panel_common_idio_balanced)
+
+### With risks: economic, political, financial, liquidity + Developmental PC1
+panel_est_common_idio_dev_pc1_bal <- func_panel_est(formula = form_common_idio_dev_pc1, 
+                                                panel_data = panel_common_idio_balanced)
+
+##############################
+### Table 6 appendices #######
+##############################
+
+# Developed countries only
+panel_est_common_idio_country_internet_dev_bal <- func_panel_est(formula = form_common_idio_country_internet, 
+                                                             panel_data = dplyr::filter(panel_common_idio_balanced,
+                                                                                        Country %in% name_country_developed))
+
+# Pre-2000
+panel_est_common_idio_country_internet_pre_bal <- func_panel_est(formula = form_common_idio_country_internet, 
+                                                             panel_data = dplyr::filter(panel_common_idio_balanced,
+                                                                                        Year < 2000))
+
+# Post-2000
+panel_est_common_idio_country_internet_post_bal <- func_panel_est(formula = form_common_idio_country_internet, 
+                                                              panel_data = dplyr::filter(panel_common_idio_balanced,
+                                                                                         Year >= 2000))
+
