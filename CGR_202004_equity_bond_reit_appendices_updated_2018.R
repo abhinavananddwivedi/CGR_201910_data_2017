@@ -168,6 +168,31 @@ nest_div_all_trend <- nest_div_all %>%
 div_all_trend_print <- nest_div_all_trend$trend_print
 names(div_all_trend_print) <- nest_div_all_trend$Country
 
+
+################# TABLE 7 ALL ASSETS OLS #####################
+
+div_all_ols_data <- nest_div_all %>%
+  dplyr::select(Country, World_mean_all) %>%
+  tidyr::unnest(World_mean_all)
+
+panel_year_all <- rep(year_min:year_max, length(unique(div_all_ols_data$Country)))
+
+panel_ols <- div_all_ols_data %>%
+  tibble::add_column('Year' = panel_year_all) %>%
+  dplyr::select(Country, Year, everything()) %>%
+  dplyr::rename('Div' = World_mean_all)
+
+RHS_common_ols <- panel_common_equity %>%
+  dplyr::filter(Country == 'Australia') %>%
+  dplyr::select(-c(Country, Div_Index)) 
+
+panel_ols <- panel_ols %>%
+  dplyr::left_join(., RHS_common_ols, by = 'Year')
+
+summary_panel_ols <- plm::plm(data = panel_ols, model = 'pooling',
+                              formula = form_common) %>%
+  summary()
+
 ###############################################################
 ################### PRINT TABLE 3 #############################
 ###############################################################
@@ -320,9 +345,13 @@ vol_mean_reit <- nest_year_return_reit %>%
 
 ###### Data for generating figure 4, 5 ######
 
-vol_mean_all <- tibble::tibble('Year' = vol_mean_equity$Year,
-                               'vol_mean_equity' = vol_mean_equity$vol_mean_full,
-                               'vol_mean_bond' = vol_mean_bond$vol_mean_full,
-                               'vol_mean_reit' = vol_mean_reit$vol_mean_full)
+# vol_mean_all <- tibble::tibble('Year' = vol_mean_equity$Year,
+#                                'vol_mean_equity' = vol_mean_equity$vol_mean_full,
+#                                'vol_mean_bond' = vol_mean_bond$vol_mean_full,
+#                                'vol_mean_reit' = vol_mean_reit$vol_mean_full)
 
+vol_mean_all <- tibble::tibble('Year' = vol_mean_equity$Year,
+                               'vol_mean_equity' = 100*sqrt(252)*(vol_mean_equity$vol_mean_full),
+                               'vol_mean_bond' = 100*sqrt(252)*(vol_mean_bond$vol_mean_full),
+                               'vol_mean_reit' = 100*sqrt(252)*(vol_mean_reit$vol_mean_full))
 
