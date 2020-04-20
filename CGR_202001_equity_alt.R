@@ -482,3 +482,46 @@ Div_ind_plot <- ggplot(data = Div_ind_full_wide,
 Div_ind_full_long_2 <- Div_ind_full_wide %>%
   tidyr::gather(Div_world_mean:Zambia, key = 'Country', value = 'Div_Index')
 
+
+
+################## Bull/bear diversification indices calculation #######################
+
+nest_year_bear_bull <- nest_year_return_LHS_RHS %>%
+  dplyr::select(Year, LHS_country_valid) %>%
+  dplyr::mutate('LHS_clean' = purrr::map(LHS_country_valid, func_NA_med_df))
+  
+
+func_bear_df <- function(df)
+{
+  func_bear_vec_2 <- function(vec)
+  {
+    vec_length <- length(vec)
+    vec_sort <- sort(vec)
+    vec_bear <- vec_sort[1:floor(vec_length/2)]
+    return(vec_bear)
+  }
+  
+  bear_df <- apply(df, 2, func_bear_vec_2)
+  return(bear_df)
+}
+
+
+func_bull_df <- function(df)
+{
+  func_bull_vec_2 <- function(vec)
+  {
+    vec_length <- length(vec)
+    vec_sort <- sort(vec)
+    vec_bull <- vec_sort[(floor(vec_length/2)+1):vec_length]
+    return(vec_bull)
+  }
+  
+  bull_df <- apply(df, 2, func_bull_vec_2)
+  return(bull_df)
+}
+
+### Separating in bear and bull returns ###
+
+nest_year_bear_bull <- nest_year_bear_bull %>%
+  dplyr::mutate('LHS_bear' = purrr::map(LHS_clean, func_bear_df),
+                'LHS_bull' = purrr::map(LHS_clean, func_bull_df))
