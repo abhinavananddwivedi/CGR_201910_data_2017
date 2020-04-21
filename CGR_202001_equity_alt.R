@@ -482,9 +482,32 @@ Div_ind_plot <- ggplot(data = Div_ind_full_wide,
 Div_ind_full_long_2 <- Div_ind_full_wide %>%
   tidyr::gather(Div_world_mean:Zambia, key = 'Country', value = 'Div_Index')
 
+############### Share of eigenvector explanatory power ################################
+
+nest_share <- nest_year_return_LHS_RHS %>%
+  dplyr::select(Year, Share)
+
+share_df <- sapply(nest_share$Share, rbind) %>% t()
+colnames(share_df) <- paste0('pc', seq(1, ncol(share_df)))
+
+share_df <- share_df %>%
+  tibble::as_tibble() %>%
+  tibble::add_column('Year' = 1986:2018) %>%
+  dplyr::select(Year, everything())
+
+share_df_90 <- share_df[, 1:15]
+
+# barplot(apply(share_df_90[, -1], 2, mean))
+
+# matplot(share_df_90$Year, share_df_90[, -1], 
+#         type = 'l', xlab = 'Year', 
+#         ylab = 'Cumulative variance explained')
+# grid()
 
 
+########################################################################################
 ################## Bull/bear diversification indices calculation #######################
+########################################################################################
 
 nest_year_bear_bull <- nest_year_return_LHS_RHS %>%
   dplyr::select(Year, LHS_country_valid) %>%
