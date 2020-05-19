@@ -115,12 +115,21 @@ Div_world_mean_plot <- ggplot(Div_world_mean_long, aes(Year, Diversification_Ind
   geom_line(mapping = aes(linetype = World_mean)) +
   theme_bw()
 
-Figure_2 <- ggplot(filter(Div_world_mean_long, World_mean == 'World_mean_all'), 
-                   aes(Year, Diversification_Index)) +
-  geom_point() +
-  geom_line() +
-  geom_smooth(method = 'lm') +
-  theme_bw()
+# Figure_2 <- ggplot(filter(Div_world_mean_long, World_mean == 'World_mean_all'), 
+#                    aes(Year, Diversification_Index)) +
+#   geom_point() +
+#   geom_line() +
+#   geom_smooth(method = 'lm') +
+#   theme_bw()
+# 
+x_reg <- Div_world_mean_wide$Year
+y_reg <- Div_world_mean_wide$World_mean_all
+Figure_2 <- plot(x = x_reg,
+                 y = y_reg,
+                 type = 'l',
+                 xlab = 'Years', ylab = 'Average Diversification')
+abline(lm(y_reg ~ x_reg), lty = 3)
+grid()
 
 ###############################################
 ########## TABLE 3 ############################
@@ -355,3 +364,35 @@ vol_mean_all <- tibble::tibble('Year' = vol_mean_equity$Year,
                                'vol_mean_bond' = 100*sqrt(252)*(vol_mean_bond$vol_mean_full),
                                'vol_mean_reit' = 100*sqrt(252)*(vol_mean_reit$vol_mean_full))
 
+### Figure 4 ###
+
+Fig_4_data <- data.frame('Year' = Div_ind_full_wide$Year,
+                         'Div_equity' = Div_world_mean_equity,
+                         'Div_bond' = Div_world_mean_bond,
+                         'Div_reit' = Div_world_mean_reit,
+                         'Vol_equity' = vol_mean_all$vol_mean_equity,
+                         'Vol_bond' = vol_mean_all$vol_mean_bond,
+                         'Vol_reit' = vol_mean_all$vol_mean_reit)
+#Equity
+Fig_4_equity <- matplot(Fig_4_data$Year, Fig_4_data[, c(2,5)], 
+                        xlab = 'Years', ylab = '', 
+                        type = 'l')
+grid()
+#Bond
+Fig_4_bond <- matplot(Fig_4_data$Year, Fig_4_data[, c(3,6)], 
+                        xlab = 'Years', ylab = '', 
+                        type = 'l')
+grid()
+#REIT
+Fig_4_reit <- matplot(Fig_4_data$Year, Fig_4_data[, c(4,7)], 
+                        xlab = 'Years', ylab = '', 
+                        type = 'l')
+grid()
+
+### Figure 5 ###
+
+Fig_5_data <- data.frame('Year' = Div_ind_full_wide$Year,
+                         'Div_mean_all' = Div_world_mean_all,
+                         'Vol_all' = apply(vol_mean_all[, -1], 1, mean))
+Fig_5_plot <- matplot(Fig_5_data$Year, Fig_5_data[, -1], type = 'l', xlab = 'Years', ylab = 'Average Diversification')
+grid()

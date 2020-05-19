@@ -247,3 +247,4 @@ nest_annual_return <- nest_year_return %>%
 Fig_4_appendix <- Div_diff_bull_bear %>%
   dplyr::select(Year, Diff) %>%
   tibble::add_column('annual_ret' = nest_annual_return$annual_return)
+

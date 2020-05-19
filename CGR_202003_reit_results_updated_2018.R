@@ -11,7 +11,15 @@ source(name_script_file, echo = F) #Compute diversification using original daily
 summ_stat_div <- apply(Div_ind_full_wide[, - 1], 2, summary) #Compute summary stats
 
 # Figure 1
-plot_div <- Div_ind_plot 
+# plot_div <- Div_ind_plot 
+
+# Figure 1
+Div_ind_full_wide <- Div_ind_full_wide %>% dplyr::arrange(Year)
+x_reg <- Div_ind_full_wide$Year
+y_reg <- Div_ind_full_wide$Div_world_mean
+Fig_1_trend_reit <- plot(x_reg, y_reg, type = 'l', xlab = 'Years', ylab = 'Diversification') 
+grid() 
+abline(lm(y_reg ~ x_reg), lty = 3)
 
 # file_RHS_common <- readr::read_csv('Panel_CGR_Common_RHS.csv')
 
@@ -118,6 +126,20 @@ func_post00 <- function(df)
   return(dplyr::filter(df, Year > 2000))
 }
 
+func_period_1 <- function(df)
+{
+  return(dplyr::filter(df, Year < 2007))
+}
+func_period_2 <- function(df)
+{
+  return(dplyr::filter(df, Year >= 2007 & Year <= 2012))
+}
+func_period_3 <- function(df)
+{
+  return(dplyr::filter(df, Year > 2012))
+}
+
+
 nest_panel_pre_post <- nest_panel_common %>%
   dplyr::select(Country, data) %>%
   dplyr::mutate('Pre_2000' = purrr::map(data, func_pre00),
@@ -158,6 +180,28 @@ names(print_trend) <- panel_trend_print$Country
 
 print_trend_2 <- dplyr::bind_rows(print_trend) %>% t(.)
 
+########################################
+#### PRINT TABLE 2: Full ###############
+########################################
+
+world_trend_full <- Div_ind_full_wide %>%
+  dplyr::select(Year, Div_world_mean)
+
+world_trend_full <- data.frame('World' = summary(lm(data = world_trend_full, 
+                                                    formula = Div_world_mean ~ Year))$coefficients['Year',])
+
+print_table_2_full <- sapply(c(world_trend_full, print_trend), rbind) %>% t()
+
+print_table_2_full <- data.frame(print_table_2_full) %>%
+  tibble::rownames_to_column(., var = 'Country') %>%
+  tibble::as_tibble() 
+
+names(print_table_2_full) <- c('Country', 'Estimate', 'Std error', 'T stats', 'p value')
+####################
+####################
+####################
+
+
 ### Full country set, pre 2000 ###
 panel_trend_print_pre <- nest_panel_pre_post %>%
   filter(Div_NA_frac_pre < 0.9) %>% # no regression results otherwise
@@ -182,6 +226,141 @@ names(print_trend_post) <- panel_trend_print_post$Country
 print_trend_post_2 <- dplyr::bind_rows(print_trend_post) %>% t(.)
 
 ##############################################################
+
+
+
+##############################################################
+######## Based on 3 subperiods: P1, P2, P3 ###################
+##############################################################
+
+nest_panel_periods <- nest_panel_common %>%
+  dplyr::select(Country, data) %>%
+  dplyr::mutate('P1' = purrr::map(data, func_period_1),
+                'P2' = purrr::map(data, func_period_2),
+                'P3' = purrr::map(data, func_period_3),
+                'NA_frac_P1' = purrr::map_dbl(P1, func_div_frac_NA),
+                'NA_frac_P2' = purrr::map_dbl(P2, func_div_frac_NA),
+                'NA_frac_P3' = purrr::map_dbl(P3, func_div_frac_NA)) %>%
+  dplyr::select(-data)
+
+### Period 1 trends ###
+nest_panel_P1 <- nest_panel_periods %>%
+  dplyr::select(Country, P1, NA_frac_P1) %>%
+  dplyr::filter(NA_frac_P1 < 1) %>%
+  dplyr::mutate('trend_P1' = purrr::map(P1, func_div_trend_NW))
+### Period 2 trends ###
+nest_panel_P2 <- nest_panel_periods %>%
+  dplyr::select(Country, P2, NA_frac_P2) %>%
+  dplyr::filter(NA_frac_P2 < 1) %>%
+  dplyr::mutate('trend_P2' = purrr::map(P2, func_div_trend_NW))
+### Period 3 trends ###
+nest_panel_P3 <- nest_panel_periods %>%
+  dplyr::select(Country, P3, NA_frac_P3) %>%
+  dplyr::filter(NA_frac_P3 < 1) %>%
+  dplyr::mutate('trend_P3' = purrr::map(P3, func_div_trend_NW))
+
+
+###############################################################
+############ Print table 2 ####################################
+###############################################################
+
+trend_data <- tibble::tibble('Year' = Div_ind_full_wide$Year, 
+                             'World_mean' = Div_ind_full_wide$Div_world_mean)
+
+
+#### PERIOD 1 ####
+panel_trend_P1 <- nest_panel_P1 %>%
+  dplyr::filter(NA_frac_P1 < 0.9) %>%
+  dplyr::select(Country, trend_P1) %>%
+  dplyr::mutate('Coef_year' = purrr::map(trend_P1, func_trend_print))
+
+print_trend_P1 <- panel_trend_P1$Coef_year
+names(print_trend_P1) <- panel_trend_P1$Country
+
+world_trend_P1 <- Div_ind_full_wide %>%
+  dplyr::filter(Year < 2007) %>%
+  dplyr::select(Year, Div_world_mean)
+
+world_trend_P1 <- data.frame('World' = summary(lm(data = dplyr::filter(trend_data, Year < 2007), 
+                                                  formula = World_mean ~ Year))$coefficients['Year',])
+
+########################################
+#### PRINT TABLE 2: Equity Period 1 ####
+########################################
+print_table_2_P1 <- sapply(c(world_trend_P1, print_trend_P1), rbind) %>% t()
+
+print_table_2_P1 <- data.frame(print_table_2_P1) %>%
+  tibble::rownames_to_column(., var = 'Country') %>%
+  tibble::as_tibble() 
+
+names(print_table_2_P1) <- c('Country', 'Estimate', 'Std error', 'T stats', 'p value')
+####################
+####################
+####################
+
+#### PERIOD 2 ####
+panel_trend_P2 <- nest_panel_P2 %>%
+  dplyr::filter(NA_frac_P2 < 0.8) %>%
+  dplyr::select(Country, trend_P2) %>%
+  dplyr::mutate('Coef_year' = purrr::map(trend_P2, func_trend_print))
+
+print_trend_P2 <- panel_trend_P2$Coef_year
+names(print_trend_P2) <- panel_trend_P2$Country
+
+world_trend_P2 <- Div_ind_full_wide %>%
+  dplyr::filter(Year >= 2007 & Year <= 2012) %>%
+  dplyr::select(Year, Div_world_mean)
+
+world_trend_P2 <- data.frame('World' = summary(lm(data = dplyr::filter(trend_data, Year >= 2007 & Year <= 2012), 
+                                                  formula = World_mean ~ Year))$coefficients['Year',])
+
+########################################
+#### PRINT TABLE 2: Equity Period 2 ####
+########################################
+print_table_2_P2 <- sapply(c(world_trend_P2, print_trend_P2), rbind) %>% t()
+
+print_table_2_P2 <- data.frame(print_table_2_P2) %>%
+  tibble::rownames_to_column(., var = 'Country') %>%
+  tibble::as_tibble() 
+
+names(print_table_2_P2) <- c('Country', 'Estimate', 'Std error', 'T stats', 'p value')
+
+
+####################
+
+#### PERIOD 3 ####
+panel_trend_P3 <- nest_panel_P3 %>%
+  dplyr::filter(NA_frac_P3 < 0.8) %>%
+  dplyr::select(Country, trend_P3) %>%
+  dplyr::mutate('Coef_year' = purrr::map(trend_P3, func_trend_print))
+
+print_trend_P3 <- panel_trend_P3$Coef_year
+names(print_trend_P3) <- panel_trend_P3$Country
+
+world_trend_P3 <- Div_ind_full_wide %>%
+  dplyr::filter(Year > 2012) %>%
+  dplyr::select(Year, Div_world_mean)
+
+world_trend_P3 <- data.frame('World' = summary(lm(data = dplyr::filter(trend_data, Year > 2012), 
+                                                  formula = World_mean ~ Year))$coefficients['Year',])
+
+########################################
+#### PRINT TABLE 2: Equity Period 3 ####
+########################################
+print_table_2_P3 <- sapply(c(world_trend_P3, print_trend_P3), rbind) %>% t()
+
+print_table_2_P3 <- data.frame(print_table_2_P3) %>%
+  tibble::rownames_to_column(., var = 'Country') %>%
+  tibble::as_tibble() 
+
+names(print_table_2_P3) <- c('Country', 'Estimate', 'Std error', 'T stats', 'p value')
+
+
+
+
+
+##############################################################
+
 
 ##############################################################
 ## Trend for the subsample of developed countries (TABLE 4) ##
@@ -765,3 +944,33 @@ panel_est_common_idio_country_internet_post_bal <- func_panel_est(formula = form
                                                                   panel_data = dplyr::filter(panel_common_idio_balanced,
                                                                                              Year >= 2000))
 
+### Fig 6 construction ###
+
+# Developed countries
+country_dev <- dplyr::intersect(colnames(Div_ind_full_wide[, -c(1,2)]), name_country_developed)
+
+Div_ind_dev_wide <- Div_ind_full_wide %>%
+  dplyr::select(Year, all_of(country_dev))
+Div_dev_mean <- apply(Div_ind_dev_wide[, -1], 1, function(vec){return(mean(vec, na.rm = T))})
+Div_ind_dev_wide <- Div_ind_dev_wide %>%
+  tibble::add_column('Div_mean_dev' = Div_dev_mean) %>%
+  dplyr::select(Year, Div_mean_dev, everything())
+
+# Emerging countries (non-developed)
+country_emerg <- dplyr::intersect(colnames(Div_ind_full_wide[, -c(1,2)]), name_country_emerging)
+
+Div_ind_emerg_wide <- Div_ind_full_wide %>%
+  dplyr::select(Year, all_of(country_emerg))
+Div_emerg_mean <- apply(Div_ind_emerg_wide[, -1], 1, function(vec){return(mean(vec, na.rm = T))})
+Div_ind_emerg_wide <- Div_ind_emerg_wide %>%
+  tibble::add_column('Div_mean_emerg' = Div_emerg_mean) %>%
+  dplyr::select(Year, Div_mean_emerg, everything())
+
+### Figure 6 ###
+
+Fig_6_data <- Div_ind_dev_wide %>%
+  dplyr::select(Year, Div_mean_dev) %>%
+  dplyr::full_join(., Div_ind_emerg_wide[, c(1,2)], by = 'Year')
+Fig_6 <- matplot(Fig_6_data$Year, Fig_6_data[,-1], type = 'l', 
+                 xlab = 'Years', ylab = 'Equity diversification')
+grid()
