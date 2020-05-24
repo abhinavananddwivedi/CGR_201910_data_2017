@@ -389,6 +389,16 @@ trend_dev_pre <- func_div_trend_NW(panel_common_dev_pre, formula = form_trend)
 panel_common_dev_post <- panel_common_dev %>% dplyr::filter(., Year >= 2000)
 trend_dev_post <- func_div_trend_NW(panel_common_dev_post, formula = form_trend)
 
+
+##### Period-wise trends #####
+
+panel_common_dev_p1 <- panel_common_dev %>% dplyr::filter(., Year < 2007 & Year >= 1986)
+trend_dev_p1 <- func_div_trend_NW(panel_common_dev_p1, formula = form_trend)
+panel_common_dev_p2 <- panel_common_dev %>% dplyr::filter(., Year <= 2012 & Year >= 2007)
+trend_dev_p2 <- func_div_trend_NW(panel_common_dev_p2, formula = form_trend)
+panel_common_dev_p3 <- panel_common_dev %>% dplyr::filter(., Year > 2012)
+trend_dev_p3 <- func_div_trend_NW(panel_common_dev_p3, formula = form_trend)
+
 #############################################################################
 ## Trend for the subsample of non-developed (emerging) countries (TABLE 4) ##
 #############################################################################
@@ -403,6 +413,30 @@ trend_emerg_pre <- func_div_trend_NW(panel_common_emerg_pre, formula = form_tren
 
 panel_common_emerg_post <- panel_common_emerg %>% dplyr::filter(., Year >= 2000)
 trend_emerg_post <- func_div_trend_NW(panel_common_emerg_post, formula = form_trend)
+
+
+##### Period-wise trends #####
+
+panel_common_emerg_p1 <- panel_common_emerg %>% dplyr::filter(., Year < 2007 & Year >= 1986)
+trend_emerg_p1 <- func_div_trend_NW(panel_common_emerg_p1, formula = form_trend)
+panel_common_emerg_p2 <- panel_common_emerg %>% dplyr::filter(., Year <= 2012 & Year >= 2007)
+trend_emerg_p2 <- func_div_trend_NW(panel_common_emerg_p2, formula = form_trend)
+panel_common_emerg_p3 <- panel_common_emerg %>% dplyr::filter(., Year > 2012)
+trend_emerg_p3 <- func_div_trend_NW(panel_common_emerg_p3, formula = form_trend)
+
+
+table_4_periods <- rbind('Developed' = func_trend_print(trend_dev),
+                         'Emerging'  = func_trend_print(trend_emerg),
+                         'Developed_period_1' = func_trend_print(trend_dev_p1),
+                         'Developed_period_2' = func_trend_print(trend_dev_p2),
+                         'Developed_period_3' = func_trend_print(trend_dev_p3),
+                         'Emerging_period_1' = func_trend_print(trend_emerg_p1),
+                         'Emerging_period_2' = func_trend_print(trend_emerg_p2),
+                         'Emerging_period_3' = func_trend_print(trend_emerg_p3))
+
+table_4_print <- table_4_periods %>%
+  as.data.frame() %>%
+  tibble::rownames_to_column(., var = 'Sample')
 
 ########################################################################
 ################ FOR PRINTING OUTPUTS (TABLE 4) ########################
