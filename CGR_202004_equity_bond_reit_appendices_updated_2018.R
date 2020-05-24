@@ -247,7 +247,64 @@ names(div_all_trend_print_pre) <- print_trend_all_pre_post$Country
 div_all_trend_print_post <- print_trend_all_pre_post$print_trend_post
 names(div_all_trend_print_post) <- print_trend_all_pre_post$Country
 
-############## PRINTING OUTPUTS ##########################
+###################################################################
+############### TABLE 3 period-wise ###############################
+###################################################################
+
+
+nest_div_all_period <- nest_div_all %>%
+  dplyr::select(Country, data) %>%
+  dplyr::mutate('data_p1' = purrr::map(data, func_period_1),
+                'data_p2' = purrr::map(data, func_period_2),
+                'data_p3' = purrr::map(data, func_period_3),
+                'world_mean_p1' = purrr::map(data_p1, func_rowmean),
+                'world_mean_p2' = purrr::map(data_p2, func_rowmean),
+                'world_mean_p3' = purrr::map(data_p3, func_rowmean),
+                'data_trend_p1' = purrr::map2(data_p1, world_mean_p1, func_data_trend),
+                'data_trend_p2' = purrr::map2(data_p2, world_mean_p2, func_data_trend),
+                'data_trend_p3' = purrr::map2(data_p3, world_mean_p3, func_data_trend)) %>%
+  dplyr::select(-data)
+
+nest_div_all_trend_period <- nest_div_all_period %>%
+  dplyr::select(Country, data_trend_p1, data_trend_p2, data_trend_p3) %>%
+  dplyr::mutate('div_frac_NA_p1' = map_dbl(data_trend_p1, func_missing),
+                'div_frac_NA_p2' = map_dbl(data_trend_p2, func_missing),
+                'div_frac_NA_p3' = map_dbl(data_trend_p3, func_missing)) %>%
+  dplyr::filter(div_frac_NA_p1 < 0.9 & div_frac_NA_p2 < 0.9 & div_frac_NA_p3 < 0.9) %>%
+  dplyr::mutate('summary_trend_p1' = purrr::map(data_trend_p1, func_div_trend_NW),
+                'summary_trend_p2' = purrr::map(data_trend_p2, func_div_trend_NW),
+                'summary_trend_p3' = purrr::map(data_trend_p3, func_div_trend_NW))
+
+name_country_table_3 <- c("Australia", 'Belgium', 'Canada', 'France',
+                          "Germany", 'Italy', 'Japan', 'Netherlands',
+                          'New Zealand', 'South Africa', 'UK', 'US')
+
+print_trend_all_period_T3 <- nest_div_all_trend_period %>%
+  dplyr::filter(Country %in% name_country_table_3) %>%
+  dplyr::select(Country, summary_trend_p1, summary_trend_p2, summary_trend_p3) %>%
+  dplyr::mutate('print_trend_p1' = purrr::map(summary_trend_p1, func_trend_print),
+                'print_trend_p2' = purrr::map(summary_trend_p2, func_trend_print),
+                'print_trend_p3' = purrr::map(summary_trend_p3, func_trend_print))
+
+
+nest_div_all_trend_print_T3 <- nest_div_all_trend %>%
+  dplyr::filter(Country %in% name_country_table_3) 
+
+div_all_trend_print_T3 <- nest_div_all_trend_print_T3$trend_print
+names(div_all_trend_print_T3) <- name_country_table_3
+
+div_all_trend_print_p1_T3 <- print_trend_all_period_T3$print_trend_p1
+names(div_all_trend_print_p1_T3) <- name_country_table_3
+
+div_all_trend_print_p2_T3 <- print_trend_all_period_T3$print_trend_p2
+names(div_all_trend_print_p2_T3) <- name_country_table_3
+
+div_all_trend_print_p3_T3 <- print_trend_all_period_T3$print_trend_p3
+names(div_all_trend_print_p3_T3) <- name_country_table_3
+
+####################################################################
+################### TABLE 3 ########################################
+####################################################################
 
 # Full
 print_trend_div_all <- dplyr::bind_rows(div_all_trend_print) %>% t(.)
@@ -259,6 +316,48 @@ print_trend_div_all_pre <- dplyr::bind_rows(div_all_trend_print_pre) %>% t(.)
 print_trend_div_all_post <- dplyr::bind_rows(div_all_trend_print_post) %>% t(.)
 
 ##########################################################
+################# PRINTING TABLE 3 #######################
+##########################################################
+print_trend_div_all <- dplyr::bind_rows(div_all_trend_print_T3) %>% t()
+print_trend_div_all_p1 <- dplyr::bind_rows(div_all_trend_print_p1_T3) %>% t()
+print_trend_div_all_p2 <- dplyr::bind_rows(div_all_trend_print_p2_T3) %>% t()
+print_trend_div_all_p3 <- dplyr::bind_rows(div_all_trend_print_p3_T3) %>% t()
+
+
+##########################################################
+############## Writing out as .csv files #################
+##########################################################
+
+tib_table_3_all <- print_trend_div_all %>%
+  as.data.frame() %>%
+  tibble::rownames_to_column(var = 'Country') %>%
+  tibble::as_tibble() 
+colnames(tib_table_3_all) <- c('Country', 'Estimate', 'Std Error', 
+                               'T Stats', 'p value')
+
+tib_table_3_all_p1 <- print_trend_div_all_p1 %>%
+  as.data.frame() %>%
+  tibble::rownames_to_column(var = 'Country') %>%
+  tibble::as_tibble() 
+colnames(tib_table_3_all_p1) <- c('Country', 'Estimate', 'Std Error', 
+                               'T Stats', 'p value')
+
+tib_table_3_all_p2 <- print_trend_div_all_p2 %>%
+  as.data.frame() %>%
+  tibble::rownames_to_column(var = 'Country') %>%
+  tibble::as_tibble() 
+colnames(tib_table_3_all_p2) <- c('Country', 'Estimate', 'Std Error', 
+                               'T Stats', 'p value')
+
+tib_table_3_all_p3 <- print_trend_div_all_p3 %>%
+  as.data.frame() %>%
+  tibble::rownames_to_column(var = 'Country') %>%
+  tibble::as_tibble() 
+colnames(tib_table_3_all_p3) <- c('Country', 'Estimate', 'Std Error', 
+                               'T Stats', 'p value')
+
+tib_table_3_combined <- rbind(tib_table_3_all, tib_table_3_all_p1,
+                              tib_table_3_all_p2, tib_table_3_all_p3)
 
 ########## Figure 4 computation ##########################
 
