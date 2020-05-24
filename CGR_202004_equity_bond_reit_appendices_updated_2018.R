@@ -495,3 +495,30 @@ Fig_5_data <- data.frame('Year' = Div_ind_full_wide$Year,
                          'Vol_all' = apply(vol_mean_all[, -1], 1, mean))
 Fig_5_plot <- matplot(Fig_5_data$Year, Fig_5_data[, -1], type = 'l', xlab = 'Years', ylab = 'Average Diversification')
 grid()
+
+##########################################################################
+##################### CORRELATION MATRIX: TABLE 6 ########################
+##########################################################################
+
+RHS_variables_corr <- panel_common_idio_equity %>%
+  dplyr::filter(Country == 'Argentina') %>%
+  dplyr::select(TED:FEDFUNDS, ERM:PC1)
+
+agg_risk_liq_bond <- panel_common_idio_bond %>%
+  dplyr::filter(Country == 'Australia') %>%
+  dplyr::select(Agg_liq_risk)
+
+agg_risk_liq_reit <- panel_common_idio_reit %>%
+  dplyr::filter(Country == 'Australia') %>%
+  dplyr::select(Agg_liq_risk)
+
+RHS_variables_corr <- RHS_variables_corr %>%
+  tibble::add_column('Agg_risk_liq_bond' = agg_risk_liq_bond$Agg_liq_risk,
+                     'Agg_risk_liq_reit' = agg_risk_liq_reit$Agg_liq_risk)
+
+table_6 <- cor(data.matrix(na.omit(RHS_variables_corr)))
+
+table_6_print <- data.frame(table_6) %>%
+  tibble::as_tibble() %>%
+  tibble::add_column('COR' = colnames(table_6)) %>%
+  dplyr::select(COR, everything())
