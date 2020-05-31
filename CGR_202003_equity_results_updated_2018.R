@@ -484,10 +484,25 @@ OLS_dev_emerg_frontier <- rbind(OLS_dev$coefficients,
                                 OLS_emerg$coefficients, 
                                 OLS_frontier$coefficients)
 
+print_table_7_OLS <- data.frame(OLS_dev_emerg_frontier) %>%
+  tibble::rownames_to_column(., var = 'Var')
+
 OLS_full_print <- map(nest_panel_common_ols$summary_OLS, 
                       function(ols_summary){return(ols_summary$coefficients)})
 # names(OLS_full_print) <- name_country_full
 names(OLS_full_print) <- nest_panel_common_ols$Country
+
+name_country_table_7_12 <- c('Australia', 'Belgium', 'Canada', 'France', 
+                             'Germany', 'Italy', 'Japan', 'Netherlands', 
+                             'New Zealand', 'South Africa', 'UK', 'US')
+
+OLS_12 <- nest_panel_common_ols %>%
+  dplyr::filter(Country %in% name_country_table_7_12) %>%
+  dplyr::select(Country, summary_OLS)
+
+print_table_7_OLS_12 <- purrr::map(OLS_12$summary_OLS,
+                                   function(ols_summary){return(ols_summary$coefficients)})
+names(print_table_7_OLS_12) <- OLS_12$Country
 
 ########################################################################
 
@@ -529,6 +544,20 @@ func_panel_est <- function(formula, panel_data, mdl = "within")
 # Convert to 'item-year' columns format for panel data in plm
 panel_common_2 <- panel_common %>%
   dplyr::select(c(Country, Year, everything())) 
+
+######### TABLE 7 ALL EQUITY ###############
+
+# Full
+data_ols_full <- panel_common_2 %>%
+  dplyr::rename('Div' = Div_Index)
+
+table_7_ols_full <- plm::plm(data = data_ols_full, formula = form_common,
+                        model = 'pooling') %>% summary()
+
+print_table_7_full <- data.frame(table_7_ols_full$coefficients) %>%
+  tibble::rownames_to_column(., var = 'Variables')
+
+############################################
 
 ### Computing panel estimates ###
 
@@ -821,6 +850,16 @@ panel_est_common_idio_country_internet_dev <- func_panel_est(formula = form_comm
                                                              panel_data = dplyr::filter(panel_common_idio,
                                                                                         Country %in% name_country_developed))
 
+# Emerging countries only
+panel_est_common_idio_country_internet_emerg <- func_panel_est(formula = form_common_idio_country_internet, 
+                                                             panel_data = dplyr::filter(panel_common_idio,
+                                                                                        Country %in% name_country_emerging_alt))
+
+# Frontier countries only
+panel_est_common_idio_country_internet_frontier <- func_panel_est(formula = form_common_idio_country_internet, 
+                                                             panel_data = dplyr::filter(panel_common_idio,
+                                                                                        Country %in% name_country_frontier))
+
 # Pre-2000
 panel_est_common_idio_country_internet_pre <- func_panel_est(formula = form_common_idio_country_internet, 
                                                              panel_data = dplyr::filter(panel_common_idio,
@@ -831,104 +870,81 @@ panel_est_common_idio_country_internet_post <- func_panel_est(formula = form_com
                                                               panel_data = dplyr::filter(panel_common_idio,
                                                                                          Year >= 2000))
 
+#### PERIOD-WISE SEGREGATION OF RESULTS ###
+
+# Period 1
+panel_est_common_idio_country_internet_p1 <- func_panel_est(formula = form_common_idio_country_internet, 
+                                                             panel_data = dplyr::filter(panel_common_idio,
+                                                                                        Year < 2007))
+# Period 2
+panel_est_common_idio_country_internet_p2 <- func_panel_est(formula = form_common_idio_country_internet, 
+                                                             panel_data = dplyr::filter(panel_common_idio,
+                                                                                        Year <= 2012 & Year >= 2008))
+# Period 3
+panel_est_common_idio_country_internet_p3 <- func_panel_est(formula = form_common_idio_country_internet, 
+                                                             panel_data = dplyr::filter(panel_common_idio,
+                                                                                        Year > 2012))
+
+
 
 ##################################################################################
 ################# Balanced panel estimations #####################################
-################# Table 5 and 6 in appendices ####################################
+################# Table 4 and 5 in appendices ####################################
 ##################################################################################
 
-panel_common_balanced <- plm::make.pbalanced(na.omit(panel_common_2), 
+panel_common_idio_balanced <- plm::make.pbalanced(na.omit(panel_common_idio), 
                                              balance.type = 'shared.individuals')
 
-### Full
-panel_est_full_bal <- func_panel_est(form_common, panel_common_balanced)
+### TABLE 4 ###
 
-# Full country sample, Pre-2000
-panel_est_pre00_bal <- func_panel_est(form_common, dplyr::filter(panel_common_balanced, 
-                                                                 Year < 2000))
+### No dev
+panel_est_com_idio_bal <- func_panel_est(form_common_idio, panel_common_idio_balanced)
 
-# Full country sample, Post-2000
-panel_est_post00_bal <- func_panel_est(form_common, dplyr::filter(panel_common_balanced, 
-                                                                  Year >= 2000))
+### Country internet
+panel_est_com_idio_country_internet_bal <- func_panel_est(form_common_idio_country_internet, 
+                                                          panel_common_idio_balanced)
 
-# Develped country sample, full year sample
-panel_est_dev_bal <- func_panel_est(form_common, dplyr::filter(panel_common_balanced, 
-                                                           Country %in% name_country_developed))
+############# TABLE 5 APPENDIX ##################
 
-# Emerging country sample, full year sample 
-panel_est_emerg_bal <- func_panel_est(form_common, dplyr::filter(panel_common_balanced, 
-                                                             Country %in% name_country_emerging))
-
-# Developed country sample, Pre 2000
-panel_est_dev_pre_bal <- func_panel_est(form_common, dplyr::filter(panel_common_balanced, 
-                                                               Country %in% name_country_developed &
-                                                                 Year < 2000))
-
-# Emerging country sample, Pre 2000
-panel_est_emerg_pre_bal <- func_panel_est(form_common, dplyr::filter(panel_common_balanced,
-                                                                 Country %in% name_country_emerging &
-                                                                   Year < 2000))
-
-# Developed country sample, Post 2000
-panel_est_dev_post_bal <- func_panel_est(form_common, dplyr::filter(panel_common_balanced,
-                                                                Country %in% name_country_developed &
-                                                                  Year >= 2000))
-
-# Emerging country sample, Post 2000
-panel_est_emerg_post_bal <- func_panel_est(form_common, dplyr::filter(panel_common_balanced,
-                                                                  Country %in% name_country_emerging &
-                                                                    Year >= 2000))
+### PC1
+panel_est_com_idio_pc1_bal <- func_panel_est(form_common_idio_dev_pc1, 
+                                             panel_common_idio_balanced)
 
 
-##########################
-### Table 6 appendices ###
-##########################
+### PERIOD-WISE SEGREGATION ###
 
-panel_common_idio_balanced <- plm::make.pbalanced(na.omit(panel_common_idio), 
-                                                  balance.type = 'shared.individuals')
+# Period 1
+panel_est_com_idio_pc1_bal_p1 <- func_panel_est(form_common_idio_dev_pc1,
+                                                dplyr::filter(panel_common_idio_balanced,
+                                                              Year < 2007))
 
-### Replacing global internet with country internet 
-panel_est_common_country_internet_bal <- func_panel_est(formula = form_common_country_internet,
-                                                    panel_data = panel_common_idio_balanced)
+# Period 2
+panel_est_com_idio_pc1_bal_p2 <- func_panel_est(form_common_idio_dev_pc1,
+                                                dplyr::filter(panel_common_idio_balanced,
+                                                              Year <= 2012 & Year >= 2007))
 
-### Replacing global internet with developmental PC1
-panel_est_common_dev_pc1_bal <- func_panel_est(formula = form_common_dev_pc1, 
-                                           panel_data = panel_common_idio_balanced)
+# Period 3
+panel_est_com_idio_pc1_bal_p3 <- func_panel_est(form_common_idio_dev_pc1,
+                                                dplyr::filter(panel_common_idio_balanced,
+                                                              Year > 2012))
 
-#############################
-### Table 6 appendices ######
-#############################
+### DEVELOPED, EMERGING AND FRONTIER COUNTRIES ###
 
-### With risks only: economic, political, financial, liquidity 
-panel_est_common_idio_bal <- func_panel_est(formula = form_common_idio, 
-                                            panel_data = panel_common_idio_balanced)
+# Developed
+panel_est_com_idio_pc1_dev_bal <- func_panel_est(form_common_idio_dev_pc1,
+                                                 dplyr::filter(panel_common_idio_balanced,
+                                                               Country %in% name_country_developed))
+# Emerging
+panel_est_com_idio_pc1_emerg_bal <- func_panel_est(form_common_idio_dev_pc1,
+                                                   dplyr::filter(panel_common_idio_balanced,
+                                                                 Country %in% name_country_emerging_alt))
+# Frontier---NO FRONTIER COUNTRY IN BALANCED
+# panel_est_com_idio_pc1_frontier_bal <- func_panel_est(form_common_idio_dev_pc1,
+#                                                  dplyr::filter(panel_common_idio_balanced,
+#                                                                Country %in% name_country_frontier))
 
-### With risks: economic, political, financial, liquidity + Country internet
-panel_est_common_idio_country_internet_bal <- func_panel_est(formula = form_common_idio_country_internet, 
-                                                         panel_data = panel_common_idio_balanced)
 
-### With risks: economic, political, financial, liquidity + Developmental PC1
-panel_est_common_idio_dev_pc1_bal <- func_panel_est(formula = form_common_idio_dev_pc1, 
-                                                panel_data = panel_common_idio_balanced)
 
-##############################
-### Table 6 appendices #######
-##############################
-
-# Developed countries only
-panel_est_common_idio_country_internet_dev_bal <- func_panel_est(formula = form_common_idio_country_internet, 
-                                                             panel_data = dplyr::filter(panel_common_idio_balanced,
-                                                                                        Country %in% name_country_developed))
-
-# Pre-2000
-panel_est_common_idio_country_internet_pre_bal <- func_panel_est(formula = form_common_idio_country_internet, 
-                                                             panel_data = dplyr::filter(panel_common_idio_balanced,
-                                                                                        Year < 2000))
-
-# Post-2000
-panel_est_common_idio_country_internet_post_bal <- func_panel_est(formula = form_common_idio_country_internet, 
-                                                              panel_data = dplyr::filter(panel_common_idio_balanced,
-                                                                                         Year >= 2000))
 ##########################
 ### Fig 6 construction ###
 ##########################

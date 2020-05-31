@@ -233,7 +233,8 @@ func_pc_out_sample <- function(df1, df2)
 #                                                 function(df){return(df[, 1:num_pc_bond])}))
 
 nest_year_return_LHS_RHS <- nest_year_return_LHS_RHS %>%
-  dplyr::filter(!(purrr::map_lgl(Lag_eig_vec, function(df){return(any(is.na(df)))}))) %>%
+  #dplyr::filter(!(purrr::map_lgl(Lag_eig_vec, function(df){return(any(is.na(df)))}))) %>%
+  dplyr::filter(Year > 1986) %>%
   dplyr::mutate('PC_out_sample' = purrr::map2(RHS_country_clean, Lag_eig_vec,
                                               func_pc_out_sample),
                 'PC_out_sample_90' = purrr::map(PC_out_sample,
