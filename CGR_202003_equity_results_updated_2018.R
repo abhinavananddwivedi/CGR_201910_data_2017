@@ -506,6 +506,29 @@ names(print_table_7_OLS_12) <- OLS_12$Country
 
 ########################################################################
 
+### OLS WITH RHS VARIABLE "CHANGE IN INTERNET" ###
+
+func_delta_int <- function(df)
+{
+  return(df %>% mutate('delta_INTERNET' = c(NA, diff(INTERNET))))
+}
+
+form_delta_internet <- Div ~ TED + VIX + SENT + FEDFUNDS + delta_INTERNET + ERM + EZ
+
+panel_common_ols_2 <- func_delta_int(panel_common)
+panel_common_ols_2_dev <- func_delta_int(panel_common_dev)
+panel_common_ols_2_emerg <- func_delta_int(panel_common_emerg_alt)
+panel_common_ols_2_frontier <- func_delta_int(panel_common_frontier)
+
+OLS_full_2 <- func_div_ols(panel_common_ols_2, form_delta_internet)
+OLS_full_2_dev <- func_div_ols(panel_common_ols_2_dev, form_delta_internet)
+OLS_full_2_emerg <- func_div_ols(panel_common_ols_2_emerg, form_delta_internet)
+OLS_full_2_frontier <- func_div_ols(panel_common_ols_2_frontier, form_delta_internet)
+
+
+
+########################################################################
+
 
 ####################################
 ### Panel estimation begins here ###
@@ -978,4 +1001,54 @@ Fig_6_data <- Div_ind_dev_wide %>%
   dplyr::full_join(., Div_ind_emerg_wide[, c(1,2)], by = 'Year')
 Fig_6 <- matplot(Fig_6_data$Year, Fig_6_data[,-1], type = 'l', 
                  xlab = 'Years', ylab = 'Equity diversification')
+grid()
+
+
+
+################
+### Figure 3 ###
+################
+
+# Pre 74 cohort
+Div_ind_country_73 <- Div_ind_full_wide %>%
+  dplyr::select(Year, dplyr::all_of(country_73))
+Div_mean_73 <- apply(Div_ind_country_73[, -1], 1, function(vec){return(mean(vec, na.rm = T))})
+Div_ind_country_73 <- Div_ind_country_73 %>%
+  tibble::add_column('Div_mean_73' = Div_mean_73) %>%
+  dplyr::select(Year, Div_mean_73, everything())
+
+# 74-83 cohort
+Div_ind_country_83 <- Div_ind_full_wide %>%
+  dplyr::select(Year, dplyr::all_of(country_83))
+Div_mean_83 <- apply(Div_ind_country_83[, -1], 1, function(vec){return(mean(vec, na.rm = T))})
+Div_ind_country_83 <- Div_ind_country_83 %>%
+  tibble::add_column('Div_mean_83' = Div_mean_83) %>%
+  dplyr::select(Year, Div_mean_83, everything())
+
+# 84-93 cohort
+Div_ind_country_93 <- Div_ind_full_wide %>%
+  dplyr::select(Year, dplyr::all_of(country_93))
+Div_mean_93 <- apply(Div_ind_country_93[, -1], 1, function(vec){return(mean(vec, na.rm = T))})
+Div_ind_country_93 <- Div_ind_country_93 %>%
+  tibble::add_column('Div_mean_93' = Div_mean_93) %>%
+  dplyr::select(Year, Div_mean_93, everything())
+
+# 94-- cohort
+Div_ind_country_2018 <- Div_ind_full_wide %>%
+  dplyr::select(Year, dplyr::all_of(country_2018))
+Div_mean_2018 <- apply(Div_ind_country_2018[, -1], 1, function(vec){return(mean(vec, na.rm = T))})
+Div_ind_country_2018 <- Div_ind_country_2018 %>%
+  tibble::add_column('Div_mean_2018' = Div_mean_2018) %>%
+  dplyr::select(Year, Div_mean_2018, everything())
+
+##### Figure 3 plot here ####
+
+Div_mean_cohort <- Div_ind_country_73 %>%
+  dplyr::select(Year, Div_mean_73) %>%
+  tibble::add_column('Div_mean_83' = Div_ind_country_83$Div_mean_83,
+                     'Div_mean_93' = Div_ind_country_93$Div_mean_93,
+                     'Div_mean_2018' = Div_ind_country_2018$Div_mean_2018)
+
+Fig_3 <- matplot(Div_mean_cohort[, 1], Div_mean_cohort[, -1], type = 'l',
+                 xlab = 'Years', ylab = 'Diversification cohorts')
 grid()

@@ -79,6 +79,7 @@ func_div_ordinary <- function(nest_data = nest_year_lhs_bear)
   
   nest_year_lhs_rhs_2 <- nest_year_lhs_rhs_2 %>%
     dplyr::filter(!is.na(Lag_eig_vec)) %>%
+    dplyr::filter(Year > 1986) %>%
     dplyr::mutate('PC_out_sample' = purrr::map2(rhs_country, Lag_eig_vec,
                                                 function(df1, df2){return(df1%*%df2)}),
                   'PC_out_sample_90' = purrr::map(PC_out_sample,
@@ -162,6 +163,7 @@ func_div_pre_cohort <- function(nest_data = nest_year_lhs_bear)
     dplyr::mutate('PC_list_j_final' = purrr::map(PC_list_j, func_select_PC_list))
   
   nest_year_pre_cohort_b_regress <- nest_year_pre_cohort_b_regress %>%
+    dplyr::filter(Year > 1986) %>%
     dplyr::mutate('div_pre_cohort' = purrr::map2(lhs_pre_cohort, 
                                                  PC_list_j_final,
                                                  func_pre_cohort_regress))

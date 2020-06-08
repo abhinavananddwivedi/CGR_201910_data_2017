@@ -96,6 +96,34 @@ func_valid_ret <- function(df, n = num_reit_usable)
 nest_year_return <- nest_year_return %>%
   dplyr::mutate('LHS_country_valid' = purrr::map(data, func_valid_ret))
 
+##############################
+##### COUNTRY COHORTS ########
+##############################
+
+# Pre 2000 cohort
+temp_99 <- nest_year_return %>%
+  dplyr::filter(Year == 1999) %>%
+  dplyr::select(-data)
+
+country_99_temp <- temp_99$LHS_country_valid[[1]] %>%
+  colnames()
+
+country_99 <- country_99_temp[1:(length(country_99_temp)-1)]
+
+# post 2000
+temp_2018 <- nest_year_return %>%
+  dplyr::filter(Year == 2018) %>%
+  dplyr::select(-data)
+
+country_9918 <- temp_2018$LHS_country_valid[[1]] %>%
+  colnames()
+
+country_2018_temp <- setdiff(country_9918, country_99)
+country_2018 <- country_2018_temp[1:(length(country_2018_temp)-1)]
+
+#############################  
+
+
 year_cohort <- 1986
 
 func_rm_full_NA <- function(df)

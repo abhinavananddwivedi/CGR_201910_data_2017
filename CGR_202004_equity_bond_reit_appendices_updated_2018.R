@@ -202,6 +202,24 @@ summary_panel_ols <- plm::plm(data = panel_ols, model = 'pooling',
                               formula = form_common) %>%
   summary()
 
+########################################################################
+
+### OLS WITH RHS VARIABLE "CHANGE IN INTERNET" ###
+
+func_delta_int <- function(df)
+{
+  return(df %>% mutate('delta_INTERNET' = c(NA, diff(INTERNET))))
+}
+
+form_delta_internet <- Div ~ TED + VIX + SENT + FEDFUNDS + delta_INTERNET + ERM + EZ
+
+panel_ols_2 <- func_delta_int(panel_ols)
+
+OLS_full_2 <- plm::plm(data = panel_ols_2, model = 'pooling',
+                       formula = form_delta_internet) %>% summary()
+
+########################################################################
+
 ###############################################################
 ################### PRINT TABLE 3 #############################
 ###############################################################
@@ -522,3 +540,69 @@ table_6_print <- data.frame(table_6) %>%
   tibble::as_tibble() %>%
   tibble::add_column('COR' = colnames(table_6)) %>%
   dplyr::select(COR, everything())
+
+############################################################################
+######## CORRELATION MATRICES: APPENDIX TABLE 1 ############################
+############################################################################
+
+# Leads
+World_mean_equity_lead <- dplyr::lead(Div_world_mean_wide$World_mean_equity)
+World_mean_bond_lead <- dplyr::lead(Div_world_mean_wide$World_mean_bond)
+World_mean_reit_lead <- dplyr::lead(Div_world_mean_wide$World_mean_reit)
+
+Div_world_mean_wide_2 <- Div_world_mean_wide %>%
+  dplyr::select(-World_mean_all) %>%
+  tibble::add_column('lead_equity' = World_mean_equity_lead,
+                     'lead_bond' = World_mean_bond_lead,
+                     'lead_reit' = World_mean_reit_lead) %>%
+  dplyr::rename('equity' = World_mean_equity,
+                'bond' = World_mean_bond,
+                'reit' = World_mean_reit)
+
+cor_matrix_full <- cor(Div_world_mean_wide_2[, c(2,3,4)])
+cor_matrix_full_lead_equity <- cor(Div_world_mean_wide_2[, c(5,3,4)],
+                                   use = 'complete.obs')
+cor_matrix_full_lead_bond <- cor(Div_world_mean_wide_2[, c(2,6,4)],
+                                   use = 'complete.obs')
+cor_matrix_full_lead_reit <- cor(Div_world_mean_wide_2[, c(2,3,7)],
+                                   use = 'complete.obs')
+
+### Period 1: 1986--2006
+
+Div_world_mean_wide_2_p1 <- dplyr::filter(Div_world_mean_wide_2, Year <= 2006)
+
+cor_matrix_full_p1 <- cor(Div_world_mean_wide_2_p1[, c(2,3,4)])
+cor_matrix_full_lead_equity_p1 <- cor(Div_world_mean_wide_2_p1[, c(5,3,4)],
+                                   use = 'complete.obs')
+cor_matrix_full_lead_bond_p1 <- cor(Div_world_mean_wide_2_p1[, c(2,6,4)],
+                                 use = 'complete.obs')
+cor_matrix_full_lead_reit_p1 <- cor(Div_world_mean_wide_2_p1[, c(2,3,7)],
+                                 use = 'complete.obs')
+
+
+
+### Period 2: 2007--2012
+
+Div_world_mean_wide_2_p2 <- dplyr::filter(Div_world_mean_wide_2, 
+                                          Year >= 2006 & Year <= 2012)
+
+cor_matrix_full_p2 <- cor(Div_world_mean_wide_2_p2[, c(2,3,4)])
+cor_matrix_full_lead_equity_p2 <- cor(Div_world_mean_wide_2_p2[, c(5,3,4)],
+                                   use = 'complete.obs')
+cor_matrix_full_lead_bond_p2 <- cor(Div_world_mean_wide_2_p2[, c(2,6,4)],
+                                 use = 'complete.obs')
+cor_matrix_full_lead_reit_p2 <- cor(Div_world_mean_wide_2_p2[, c(2,3,7)],
+                                 use = 'complete.obs')
+
+
+### Period 3: 2013--
+
+Div_world_mean_wide_2_p3 <- dplyr::filter(Div_world_mean_wide_2, Year > 2012)
+
+cor_matrix_full_p3 <- cor(Div_world_mean_wide_2_p3[, c(2,3,4)])
+cor_matrix_full_lead_equity_p3 <- cor(Div_world_mean_wide_2_p3[, c(5,3,4)],
+                                   use = 'complete.obs')
+cor_matrix_full_lead_bond_p3 <- cor(Div_world_mean_wide_2_p3[, c(2,6,4)],
+                                 use = 'complete.obs')
+cor_matrix_full_lead_reit_p3 <- cor(Div_world_mean_wide_2[, c(2,3,7)],
+                                 use = 'complete.obs')
